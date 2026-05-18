@@ -17,6 +17,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as FiliallarRouteImport } from './routes/filiallar'
 import { Route as DorilarRouteImport } from './routes/dorilar'
 import { Route as BuyurtmalarimRouteImport } from './routes/buyurtmalarim'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
 const YangiliklarRoute = YangiliklarRouteImport.update({
@@ -59,6 +60,11 @@ const BuyurtmalarimRoute = BuyurtmalarimRouteImport.update({
   path: '/buyurtmalarim',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -67,6 +73,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/buyurtmalarim': typeof BuyurtmalarimRoute
   '/dorilar': typeof DorilarRoute
   '/filiallar': typeof FiliallarRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/buyurtmalarim': typeof BuyurtmalarimRoute
   '/dorilar': typeof DorilarRoute
   '/filiallar': typeof FiliallarRoute
@@ -90,6 +98,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/buyurtmalarim': typeof BuyurtmalarimRoute
   '/dorilar': typeof DorilarRoute
   '/filiallar': typeof FiliallarRoute
@@ -103,6 +112,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/buyurtmalarim'
     | '/dorilar'
     | '/filiallar'
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/buyurtmalarim'
     | '/dorilar'
     | '/filiallar'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/buyurtmalarim'
     | '/dorilar'
     | '/filiallar'
@@ -137,6 +149,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   BuyurtmalarimRoute: typeof BuyurtmalarimRoute
   DorilarRoute: typeof DorilarRoute
   FiliallarRoute: typeof FiliallarRoute
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BuyurtmalarimRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -217,6 +237,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   BuyurtmalarimRoute: BuyurtmalarimRoute,
   DorilarRoute: DorilarRoute,
   FiliallarRoute: FiliallarRoute,
