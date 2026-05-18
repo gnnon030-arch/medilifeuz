@@ -10,13 +10,38 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as YangiliklarRouteImport } from './routes/yangiliklar'
+import { Route as SavatchaRouteImport } from './routes/savatcha'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ProfilRouteImport } from './routes/profil'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as FiliallarRouteImport } from './routes/filiallar'
 import { Route as DorilarRouteImport } from './routes/dorilar'
+import { Route as BuyurtmalarimRouteImport } from './routes/buyurtmalarim'
 import { Route as IndexRouteImport } from './routes/index'
 
 const YangiliklarRoute = YangiliklarRouteImport.update({
   id: '/yangiliklar',
   path: '/yangiliklar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SavatchaRoute = SavatchaRouteImport.update({
+  id: '/savatcha',
+  path: '/savatcha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfilRoute = ProfilRouteImport.update({
+  id: '/profil',
+  path: '/profil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FiliallarRoute = FiliallarRouteImport.update({
@@ -29,6 +54,11 @@ const DorilarRoute = DorilarRouteImport.update({
   path: '/dorilar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BuyurtmalarimRoute = BuyurtmalarimRouteImport.update({
+  id: '/buyurtmalarim',
+  path: '/buyurtmalarim',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -37,35 +67,83 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/buyurtmalarim': typeof BuyurtmalarimRoute
   '/dorilar': typeof DorilarRoute
   '/filiallar': typeof FiliallarRoute
+  '/login': typeof LoginRoute
+  '/profil': typeof ProfilRoute
+  '/register': typeof RegisterRoute
+  '/savatcha': typeof SavatchaRoute
   '/yangiliklar': typeof YangiliklarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/buyurtmalarim': typeof BuyurtmalarimRoute
   '/dorilar': typeof DorilarRoute
   '/filiallar': typeof FiliallarRoute
+  '/login': typeof LoginRoute
+  '/profil': typeof ProfilRoute
+  '/register': typeof RegisterRoute
+  '/savatcha': typeof SavatchaRoute
   '/yangiliklar': typeof YangiliklarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/buyurtmalarim': typeof BuyurtmalarimRoute
   '/dorilar': typeof DorilarRoute
   '/filiallar': typeof FiliallarRoute
+  '/login': typeof LoginRoute
+  '/profil': typeof ProfilRoute
+  '/register': typeof RegisterRoute
+  '/savatcha': typeof SavatchaRoute
   '/yangiliklar': typeof YangiliklarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dorilar' | '/filiallar' | '/yangiliklar'
+  fullPaths:
+    | '/'
+    | '/buyurtmalarim'
+    | '/dorilar'
+    | '/filiallar'
+    | '/login'
+    | '/profil'
+    | '/register'
+    | '/savatcha'
+    | '/yangiliklar'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dorilar' | '/filiallar' | '/yangiliklar'
-  id: '__root__' | '/' | '/dorilar' | '/filiallar' | '/yangiliklar'
+  to:
+    | '/'
+    | '/buyurtmalarim'
+    | '/dorilar'
+    | '/filiallar'
+    | '/login'
+    | '/profil'
+    | '/register'
+    | '/savatcha'
+    | '/yangiliklar'
+  id:
+    | '__root__'
+    | '/'
+    | '/buyurtmalarim'
+    | '/dorilar'
+    | '/filiallar'
+    | '/login'
+    | '/profil'
+    | '/register'
+    | '/savatcha'
+    | '/yangiliklar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BuyurtmalarimRoute: typeof BuyurtmalarimRoute
   DorilarRoute: typeof DorilarRoute
   FiliallarRoute: typeof FiliallarRoute
+  LoginRoute: typeof LoginRoute
+  ProfilRoute: typeof ProfilRoute
+  RegisterRoute: typeof RegisterRoute
+  SavatchaRoute: typeof SavatchaRoute
   YangiliklarRoute: typeof YangiliklarRoute
 }
 
@@ -76,6 +154,34 @@ declare module '@tanstack/react-router' {
       path: '/yangiliklar'
       fullPath: '/yangiliklar'
       preLoaderRoute: typeof YangiliklarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/savatcha': {
+      id: '/savatcha'
+      path: '/savatcha'
+      fullPath: '/savatcha'
+      preLoaderRoute: typeof SavatchaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profil': {
+      id: '/profil'
+      path: '/profil'
+      fullPath: '/profil'
+      preLoaderRoute: typeof ProfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/filiallar': {
@@ -92,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DorilarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/buyurtmalarim': {
+      id: '/buyurtmalarim'
+      path: '/buyurtmalarim'
+      fullPath: '/buyurtmalarim'
+      preLoaderRoute: typeof BuyurtmalarimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -104,8 +217,13 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BuyurtmalarimRoute: BuyurtmalarimRoute,
   DorilarRoute: DorilarRoute,
   FiliallarRoute: FiliallarRoute,
+  LoginRoute: LoginRoute,
+  ProfilRoute: ProfilRoute,
+  RegisterRoute: RegisterRoute,
+  SavatchaRoute: SavatchaRoute,
   YangiliklarRoute: YangiliklarRoute,
 }
 export const routeTree = rootRouteImport
