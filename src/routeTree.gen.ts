@@ -9,8 +9,26 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as YangiliklarRouteImport } from './routes/yangiliklar'
+import { Route as FiliallarRouteImport } from './routes/filiallar'
+import { Route as DorilarRouteImport } from './routes/dorilar'
 import { Route as IndexRouteImport } from './routes/index'
 
+const YangiliklarRoute = YangiliklarRouteImport.update({
+  id: '/yangiliklar',
+  path: '/yangiliklar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FiliallarRoute = FiliallarRouteImport.update({
+  id: '/filiallar',
+  path: '/filiallar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DorilarRoute = DorilarRouteImport.update({
+  id: '/dorilar',
+  path: '/dorilar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +37,61 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dorilar': typeof DorilarRoute
+  '/filiallar': typeof FiliallarRoute
+  '/yangiliklar': typeof YangiliklarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dorilar': typeof DorilarRoute
+  '/filiallar': typeof FiliallarRoute
+  '/yangiliklar': typeof YangiliklarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dorilar': typeof DorilarRoute
+  '/filiallar': typeof FiliallarRoute
+  '/yangiliklar': typeof YangiliklarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/dorilar' | '/filiallar' | '/yangiliklar'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/dorilar' | '/filiallar' | '/yangiliklar'
+  id: '__root__' | '/' | '/dorilar' | '/filiallar' | '/yangiliklar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DorilarRoute: typeof DorilarRoute
+  FiliallarRoute: typeof FiliallarRoute
+  YangiliklarRoute: typeof YangiliklarRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/yangiliklar': {
+      id: '/yangiliklar'
+      path: '/yangiliklar'
+      fullPath: '/yangiliklar'
+      preLoaderRoute: typeof YangiliklarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/filiallar': {
+      id: '/filiallar'
+      path: '/filiallar'
+      fullPath: '/filiallar'
+      preLoaderRoute: typeof FiliallarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dorilar': {
+      id: '/dorilar'
+      path: '/dorilar'
+      fullPath: '/dorilar'
+      preLoaderRoute: typeof DorilarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,7 +104,20 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DorilarRoute: DorilarRoute,
+  FiliallarRoute: FiliallarRoute,
+  YangiliklarRoute: YangiliklarRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
