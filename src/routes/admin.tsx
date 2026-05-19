@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, KeyRound, LogOut } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,9 +12,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { ADMIN_PANEL_PASSWORD, isAdminUnlocked, setAdminUnlocked } from "@/lib/admin";
+import { adminListUsers, adminResetPassword, adminUpdateUser, adminDeleteUser } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
@@ -21,25 +22,40 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminPage() {
-  const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
-  useEffect(() => { if (!loading && (!user || !isAdmin)) navigate({ to: "/" }); }, [loading, user, isAdmin, navigate]);
-  if (!user || !isAdmin) return null;
+  const [unlocked, setUnlocked] = useState(false);
+  useEffect(() => { setUnlocked(isAdminUnlocked()); }, []);
+  if (!unlocked) {
+    return (
+      <div className="container mx-auto px-4 py-20 text-center space-y-4">
+        <h1 className="text-2xl font-semibold">Admin panel yopiq</h1>
+        <p className="text-muted-foreground">Saytning eng pastida © 2000 MediLife yozuviga bosib parol kiriting.</p>
+        <Button onClick={() => navigate({ to: "/" })}>Bosh sahifaga qaytish</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold mb-6">Admin Panel</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Admin Panel</h1>
+        <Button variant="outline" size="sm" onClick={() => { setAdminUnlocked(false); navigate({ to: "/" }); }} className="gap-2">
+          <LogOut className="h-4 w-4" /> Chiqish
+        </Button>
+      </div>
       <Tabs defaultValue="news">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="news">Yangiliklar</TabsTrigger>
           <TabsTrigger value="medicines">Dorilar</TabsTrigger>
           <TabsTrigger value="branches">Filiallar</TabsTrigger>
           <TabsTrigger value="orders">Buyurtmalar</TabsTrigger>
+          <TabsTrigger value="users">Foydalanuvchilar</TabsTrigger>
         </TabsList>
         <TabsContent value="news" className="mt-6"><NewsAdmin /></TabsContent>
         <TabsContent value="medicines" className="mt-6"><MedicinesAdmin /></TabsContent>
         <TabsContent value="branches" className="mt-6"><BranchesAdmin /></TabsContent>
         <TabsContent value="orders" className="mt-6"><OrdersAdmin /></TabsContent>
+        <TabsContent value="users" className="mt-6"><UsersAdmin /></TabsContent>
       </Tabs>
     </div>
   );
