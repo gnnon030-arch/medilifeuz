@@ -7,12 +7,12 @@ import {
   Scripts,
   Link,
 } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import appCss from "../styles.css?url";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { AuthProvider } from "@/hooks/use-auth";
 import { CartProvider } from "@/hooks/use-cart";
 import { Toaster } from "@/components/ui/sonner";
 import "@/lib/i18n";
