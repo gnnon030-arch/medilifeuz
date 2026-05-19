@@ -7,12 +7,12 @@ import {
   Scripts,
   Link,
 } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import appCss from "../styles.css?url";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { AuthProvider } from "@/hooks/use-auth";
 import { CartProvider } from "@/hooks/use-cart";
 import { Toaster } from "@/components/ui/sonner";
 import "@/lib/i18n";
@@ -92,31 +92,12 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function AdminHotkey() {
-  const { isAdmin } = useAuth();
-  const router = useRouter();
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.altKey && e.shiftKey && (e.key === "5" || e.code === "Digit5")) {
-        e.preventDefault();
-        if (isAdmin) {
-          router.navigate({ to: "/admin" });
-        }
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [isAdmin, router]);
-  return null;
-}
-
 function RootComponent() {
   const [queryClient] = useState(() => new QueryClient());
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CartProvider>
-          <AdminHotkey />
           <div className="min-h-screen flex flex-col">
             <Header />
             <main className="flex-1">

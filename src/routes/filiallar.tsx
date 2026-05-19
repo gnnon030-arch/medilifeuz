@@ -5,6 +5,7 @@ import { Phone, MapPin, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { GOOGLE_MAPS_API_KEY } from "@/lib/admin";
 
 export const Route = createFileRoute("/filiallar")({
   component: BranchesPage,
@@ -28,30 +29,33 @@ function BranchesPage() {
         <p className="text-muted-foreground">Hozircha filiallar qo'shilmagan.</p>
       ) : (
         <div className="grid md:grid-cols-2 gap-6">
-          {data.map((b: any) => (
-            <Card key={b.id} className="overflow-hidden">
-              {b.image_url && <img src={b.image_url} alt={b.name} className="w-full h-48 object-cover" />}
-              <div className="p-5 space-y-3">
-                <h3 className="text-xl font-semibold">{b.name}</h3>
-                {b.address && <p className="text-sm flex items-start gap-2"><MapPin className="h-4 w-4 mt-0.5 text-primary shrink-0" />{b.address}</p>}
-                {b.phone && <p className="text-sm flex items-center gap-2"><Phone className="h-4 w-4 text-primary" /><a href={`tel:${b.phone}`}>{b.phone}</a></p>}
-                {b.map_url && (
-                  <a href={b.map_url} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" size="sm" className="gap-2"><ExternalLink className="h-4 w-4" /> {t("branches.view_map")}</Button>
-                  </a>
-                )}
-                {b.map_url && b.map_url.includes("google.com/maps") && (
+          {data.map((b: any) => {
+            const q = encodeURIComponent(b.address || b.name || "Namangan");
+            const embedSrc = `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${q}`;
+            return (
+              <Card key={b.id} className="overflow-hidden">
+                {b.image_url && <img src={b.image_url} alt={b.name} className="w-full h-48 object-cover" />}
+                <div className="p-5 space-y-3">
+                  <h3 className="text-xl font-semibold">{b.name}</h3>
+                  {b.address && <p className="text-sm flex items-start gap-2"><MapPin className="h-4 w-4 mt-0.5 text-primary shrink-0" />{b.address}</p>}
+                  {b.phone && <p className="text-sm flex items-center gap-2"><Phone className="h-4 w-4 text-primary" /><a href={`tel:${b.phone}`}>{b.phone}</a></p>}
                   <div className="aspect-video rounded-md overflow-hidden border">
                     <iframe
-                      src={b.map_url.includes("/embed") ? b.map_url : `https://www.google.com/maps?q=${encodeURIComponent(b.address || b.name)}&output=embed`}
+                      src={embedSrc}
                       width="100%" height="100%" style={{ border: 0 }} loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade" title={b.name}
+                      allowFullScreen
                     />
                   </div>
-                )}
-              </div>
-            </Card>
-          ))}
+                  {b.map_url && (
+                    <a href={b.map_url} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm" className="gap-2"><ExternalLink className="h-4 w-4" /> {t("branches.view_map")}</Button>
+                    </a>
+                  )}
+                </div>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

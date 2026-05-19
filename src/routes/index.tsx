@@ -85,23 +85,24 @@ function Home() {
   });
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-16">
+    <div className="container mx-auto px-6 md:px-10 lg:px-16 py-8 space-y-16">
       {/* Hero */}
-      <section className="grid md:grid-cols-2 gap-8 items-center py-8">
-        <div className="space-y-5">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-            <span className="text-primary">MediLife</span> — {t("home.hero_title")}
+      <section className="grid md:grid-cols-2 gap-10 items-center py-10 md:py-16">
+        <div className="space-y-6 md:pl-4 lg:pl-8">
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-[1.05]">
+            <span className="text-primary">MediLife</span>
+            <span className="block mt-2">— {t("home.hero_title")}</span>
           </h1>
-          <p className="text-lg text-muted-foreground">{t("home.hero_sub")}</p>
-          <div className="flex gap-3">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-xl">{t("home.hero_sub")}</p>
+          <div className="flex flex-wrap gap-3">
             <Link to="/dorilar"><Button size="lg" className="gap-2">{t("home.cta")} <ArrowRight className="h-4 w-4" /></Button></Link>
             <Link to="/filiallar"><Button size="lg" variant="outline">{t("nav.branches")}</Button></Link>
           </div>
         </div>
         <div className="flex justify-center">
           <div className="relative">
-            <div className="absolute inset-0 gradient-primary rounded-full blur-3xl opacity-30 scale-110" />
-            <img src={logo} alt="MediLife" className="relative w-64 h-64 md:w-80 md:h-80 object-cover rounded-3xl shadow-2xl" />
+            <div className="absolute inset-0 gradient-primary rounded-full blur-3xl opacity-40 scale-110" />
+            <img src={logo} alt="MediLife" className="relative w-80 h-80 md:w-[420px] md:h-[420px] lg:w-[480px] lg:h-[480px] object-cover rounded-3xl shadow-2xl" />
           </div>
         </div>
       </section>
