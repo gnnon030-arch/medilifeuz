@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 export function Header() {
   const { t } = useTranslation();
   const { count } = useCart();
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
 
