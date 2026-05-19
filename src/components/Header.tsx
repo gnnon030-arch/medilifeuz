@@ -92,7 +92,7 @@ export function Header() {
                 <DropdownMenuItem onClick={() => navigate({ to: "/buyurtmalarim" })}>
                   {t("nav.orders")}
                 </DropdownMenuItem>
-                {isAdmin && (
+                {typeof window !== "undefined" && localStorage.getItem("medilife-admin-unlock-v1") === "1" && (
                   <DropdownMenuItem onClick={() => navigate({ to: "/admin" })}>
                     <Shield className="h-4 w-4 mr-2" /> Admin
                   </DropdownMenuItem>
