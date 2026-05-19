@@ -5,6 +5,7 @@ import { Phone, MapPin, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { GOOGLE_MAPS_API_KEY } from "@/lib/admin";
 
 export const Route = createFileRoute("/filiallar")({
   component: BranchesPage,
