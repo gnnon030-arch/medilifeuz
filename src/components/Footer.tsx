@@ -1,7 +1,31 @@
+import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Phone, Mail, MapPin } from "lucide-react";
 import logo from "@/assets/medilife-logo.jpg";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { ADMIN_PANEL_PASSWORD, setAdminUnlocked } from "@/lib/admin";
 
 export function Footer() {
+  const [open, setOpen] = useState(false);
+  const [pwd, setPwd] = useState("");
+  const navigate = useNavigate();
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pwd === ADMIN_PANEL_PASSWORD) {
+      setAdminUnlocked(true);
+      setOpen(false);
+      setPwd("");
+      toast.success("Admin panelga kirildi");
+      navigate({ to: "/admin" });
+    } else {
+      toast.error("Noto'g'ri parol");
+    }
+  };
+
   return (
     <footer className="border-t bg-card mt-16">
       <div className="container mx-auto px-4 py-10 grid gap-8 md:grid-cols-3">
@@ -25,9 +49,32 @@ export function Footer() {
         <div>
           <h3 className="font-semibold mb-3">Mas'ul</h3>
           <p className="text-sm text-muted-foreground">Ismoil</p>
-          <p className="text-sm text-muted-foreground mt-4">© 2000 MediLife. Barcha huquqlar himoyalangan.</p>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="text-sm text-muted-foreground mt-4 hover:text-foreground transition-colors cursor-default select-none"
+            title=""
+          >
+            © 2000 MediLife. Barcha huquqlar himoyalangan.
+          </button>
         </div>
       </div>
+
+      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setPwd(""); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Admin panel</DialogTitle></DialogHeader>
+          <form onSubmit={submit} className="space-y-3">
+            <Input
+              type="password"
+              placeholder="Parol"
+              autoFocus
+              value={pwd}
+              onChange={(e) => setPwd(e.target.value)}
+            />
+            <Button type="submit" className="w-full">Kirish</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </footer>
   );
 }
