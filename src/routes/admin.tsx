@@ -265,3 +265,99 @@ function OrdersAdmin() {
     </div>
   );
 }
+
+/* ---------------- USERS ---------------- */
+function UsersAdmin() {
+  const listFn = useServerFn(adminListUsers);
+  const resetFn = useServerFn(adminResetPassword);
+  const updateFn = useServerFn(adminUpdateUser);
+  const deleteFn = useServerFn(adminDeleteUser);
+
+  const { data, refetch, isLoading } = useQuery({
+    queryKey: ["admin-users"],
+    queryFn: () => listFn({ data: { password: ADMIN_PANEL_PASSWORD } }),
+  });
+
+  const [editing, setEditing] = useState<any | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [pwdUser, setPwdUser] = useState<any | null>(null);
+  const [newPwd, setNewPwd] = useState("");
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    try {
+      await updateFn({ data: { password: ADMIN_PANEL_PASSWORD, user_id: editing.id, full_name: editing.full_name, phone: editing.phone, email: editing.email } });
+      toast.success("Saqlandi"); setEditOpen(false); refetch();
+    } catch (e: any) { toast.error(e.message); }
+  };
+
+  const savePwd = async () => {
+    if (!pwdUser || newPwd.length < 6) return toast.error("Parol kamida 6 ta belgi");
+    try {
+      await resetFn({ data: { password: ADMIN_PANEL_PASSWORD, user_id: pwdUser.id, new_password: newPwd } });
+      toast.success(`Yangi parol o'rnatildi: ${newPwd}`);
+      setPwdUser(null); setNewPwd("");
+    } catch (e: any) { toast.error(e.message); }
+  };
+
+  const delUser = async (id: string) => {
+    if (!confirm("Foydalanuvchini butunlay o'chirasizmi?")) return;
+    try {
+      await deleteFn({ data: { password: ADMIN_PANEL_PASSWORD, user_id: id } });
+      toast.success("O'chirildi"); refetch();
+    } catch (e: any) { toast.error(e.message); }
+  };
+
+  if (isLoading) return <p className="text-muted-foreground">Yuklanmoqda...</p>;
+
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-muted-foreground">Jami: {data?.users.length ?? 0} foydalanuvchi. Parolni unutgan foydalanuvchiga yangi parol o'rnatishingiz mumkin.</p>
+      <div className="grid md:grid-cols-2 gap-3">
+        {data?.users.map((u) => (
+          <Card key={u.id} className="p-4 space-y-2">
+            <div>
+              <p className="font-medium">{u.full_name || "(Ism kiritilmagan)"}</p>
+              <p className="text-xs text-muted-foreground break-all">📧 {u.email}</p>
+              {u.phone && <p className="text-xs text-muted-foreground">📞 {u.phone}</p>}
+              <p className="text-xs text-muted-foreground mt-1">Ro'yxatdan: {new Date(u.created_at).toLocaleDateString()}</p>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button size="sm" variant="outline" className="gap-1" onClick={() => { setEditing({ ...u }); setEditOpen(true); }}>
+                <Pencil className="h-3.5 w-3.5" /> Tahrirlash
+              </Button>
+              <Button size="sm" variant="outline" className="gap-1" onClick={() => { setPwdUser(u); setNewPwd(""); }}>
+                <KeyRound className="h-3.5 w-3.5" /> Parol
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => delUser(u.id)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Foydalanuvchini tahrirlash</DialogTitle></DialogHeader>
+          {editing && <div className="space-y-3">
+            <div><Label>Ism</Label><Input value={editing.full_name ?? ""} onChange={(e) => setEditing({ ...editing, full_name: e.target.value })} /></div>
+            <div><Label>Email</Label><Input type="email" value={editing.email ?? ""} onChange={(e) => setEditing({ ...editing, email: e.target.value })} /></div>
+            <div><Label>Telefon</Label><Input value={editing.phone ?? ""} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} /></div>
+            <Button onClick={saveEdit} className="w-full">Saqlash</Button>
+          </div>}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!pwdUser} onOpenChange={(v) => { if (!v) { setPwdUser(null); setNewPwd(""); } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Yangi parol o'rnatish</DialogTitle></DialogHeader>
+          {pwdUser && <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">Foydalanuvchi: <b>{pwdUser.email}</b></p>
+            <Input type="text" placeholder="Yangi parol (kamida 6 ta belgi)" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} />
+            <Button onClick={savePwd} className="w-full">O'rnatish</Button>
+            <p className="text-xs text-muted-foreground">⚠️ Eski parol qaytarib bo'lmaydi — tizim parollarni shifrlangan saqlaydi. Faqat yangi parol o'rnatish mumkin.</p>
+          </div>}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
