@@ -12,9 +12,25 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
 import { ADMIN_PANEL_PASSWORD, isAdminUnlocked, setAdminUnlocked } from "@/lib/admin";
-import { adminListUsers, adminResetPassword, adminUpdateUser, adminDeleteUser } from "@/lib/admin.functions";
+import {
+  adminDeleteBranch,
+  adminDeleteMedicine,
+  adminDeleteNews,
+  adminDeleteUser,
+  adminListBranches,
+  adminListMedicines,
+  adminListNews,
+  adminListOrders,
+  adminListUsers,
+  adminResetPassword,
+  adminSaveBranch,
+  adminSaveMedicine,
+  adminSaveNews,
+  adminSetOrderStatus,
+  adminUpdateUser,
+  adminUploadMedia,
+} from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
