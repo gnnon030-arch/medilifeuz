@@ -14,6 +14,7 @@ const resources = {
       branches: { title: "Bizning Filiallar", view_map: "Xaritada ko'rish" },
       admin: { title: "Admin Panel", tabs: { news: "Yangiliklar", medicines: "Dorilar", branches: "Filiallar", orders: "Buyurtmalar" } },
       orders: { title: "Buyurtmalarim", status: { pending: "Kutilmoqda", confirmed: "Tasdiqlangan", delivering: "Yetkazilmoqda", delivered: "Yetkazildi", cancelled: "Bekor qilingan" }, rate: "Baholash", rating: "Reyting", comment: "Sharh" },
+      footer: { tagline: "Sog'lig'ingiz uchun ishonchli onlayn dorixona. Eng sara va arzon dorilar — Namangan shahrida.", call_center: "Call markaz", manager: "Mas'ul", manager_name: "Ismoil", address: "Namangan shahri, O'zbekiston", rights: "© 2000 MediLife. Barcha huquqlar himoyalangan." },
     },
   },
   ru: {
@@ -28,6 +29,7 @@ const resources = {
       branches: { title: "Наши филиалы", view_map: "Открыть карту" },
       admin: { title: "Админ панель", tabs: { news: "Новости", medicines: "Лекарства", branches: "Филиалы", orders: "Заказы" } },
       orders: { title: "Мои заказы", status: { pending: "Ожидание", confirmed: "Подтверждён", delivering: "Доставляется", delivered: "Доставлен", cancelled: "Отменён" }, rate: "Оценить", rating: "Рейтинг", comment: "Отзыв" },
+      footer: { tagline: "Надёжная онлайн-аптека для вашего здоровья. Лучшие и доступные лекарства — в г. Наманган.", call_center: "Колл-центр", manager: "Ответственный", manager_name: "Исмоил", address: "г. Наманган, Узбекистан", rights: "© 2000 MediLife. Все права защищены." },
     },
   },
   en: {
@@ -42,6 +44,7 @@ const resources = {
       branches: { title: "Our Branches", view_map: "Open map" },
       admin: { title: "Admin Panel", tabs: { news: "News", medicines: "Medicines", branches: "Branches", orders: "Orders" } },
       orders: { title: "My Orders", status: { pending: "Pending", confirmed: "Confirmed", delivering: "Delivering", delivered: "Delivered", cancelled: "Cancelled" }, rate: "Rate", rating: "Rating", comment: "Comment" },
+      footer: { tagline: "Trusted online pharmacy for your health. Best & affordable medicines — in Namangan.", call_center: "Call center", manager: "Manager", manager_name: "Ismoil", address: "Namangan, Uzbekistan", rights: "© 2000 MediLife. All rights reserved." },
     },
   },
 };

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { Phone, Mail, MapPin } from "lucide-react";
 import logo from "@/assets/medilife-logo.jpg";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,6 +10,7 @@ import { toast } from "sonner";
 import { ADMIN_PANEL_PASSWORD, setAdminUnlocked } from "@/lib/admin";
 
 export function Footer() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [pwd, setPwd] = useState("");
   const navigate = useNavigate();
@@ -34,28 +36,26 @@ export function Footer() {
             <img src={logo} alt="MediLife" className="h-10 w-10 rounded-md object-cover" />
             <span className="font-bold text-xl text-primary">MediLife</span>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Sog'lig'ingiz uchun ishonchli onlayn dorixona. Eng sara va arzon dorilar — Namangan shahrida.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("footer.tagline")}</p>
         </div>
         <div>
-          <h3 className="font-semibold mb-3">Call markaz</h3>
+          <h3 className="font-semibold mb-3">{t("footer.call_center")}</h3>
           <ul className="space-y-2 text-sm">
             <li className="flex items-center gap-2"><Phone className="h-4 w-4 text-primary" /> <a href="tel:+998913620080">+998 91 362 00 80</a></li>
             <li className="flex items-center gap-2"><Mail className="h-4 w-4 text-primary" /> <a href="mailto:gnnon030@gmail.com">gnnon030@gmail.com</a></li>
-            <li className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" /> Namangan shahri, O'zbekiston</li>
+            <li className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" /> {t("footer.address")}</li>
           </ul>
         </div>
         <div>
-          <h3 className="font-semibold mb-3">Mas'ul</h3>
-          <p className="text-sm text-muted-foreground">Ismoil</p>
+          <h3 className="font-semibold mb-3">{t("footer.manager")}</h3>
+          <p className="text-sm text-muted-foreground">{t("footer.manager_name")}</p>
           <button
             type="button"
             onClick={() => setOpen(true)}
             className="text-sm text-muted-foreground mt-4 hover:text-foreground transition-colors cursor-default select-none"
             title=""
           >
-            © 2000 MediLife. Barcha huquqlar himoyalangan.
+            {t("footer.rights")}
           </button>
         </div>
       </div>
