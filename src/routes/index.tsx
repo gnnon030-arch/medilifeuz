@@ -90,7 +90,7 @@ function Home() {
       <section className="grid md:grid-cols-2 gap-10 items-center py-10 md:py-16">
         <div className="space-y-6 md:pl-4 lg:pl-8">
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-[1.05]">
-            <span className="text-primary">MediLife</span>
+            <span className="text-primary text-7xl">MediLife</span>
             <span className="block mt-2 text-6xl">— {t("home.hero_title")}</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-xl">{t("home.hero_sub")}</p>
