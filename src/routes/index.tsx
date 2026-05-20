@@ -102,7 +102,7 @@ function Home() {
         <div className="flex justify-center">
           <div className="relative">
             <div className="absolute inset-0 gradient-primary rounded-full blur-3xl opacity-40 scale-110" />
-            <img src={logo} alt="MediLife" className="relative w-80 h-80 md:w-[500px] md:h-[500px] lg:w-[600px] lg:h-[600px] object-cover rounded-3xl shadow-2xl" />
+            <img src={logo} alt="MediLife" className="relative w-80 h-80 md:w-[500px] md:h-[500px] lg:w-[600px] lg:h-[600px] object-cover rounded-3xl shadow-2xl text-8xl" />
           </div>
         </div>
       </section>
