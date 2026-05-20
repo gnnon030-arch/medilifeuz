@@ -112,15 +112,18 @@ function ImageInput({ value, onChange }: { value: string; onChange: (v: string) 
 
 /* ---------------- NEWS ---------------- */
 function NewsAdmin() {
-  const { data = [], refetch } = useQuery({ queryKey: ["admin-news"], queryFn: async () => (await supabase.from("news").select("*").order("created_at", { ascending: false })).data ?? [] });
+  const listFn = useServerFn(adminListNews);
+  const saveFn = useServerFn(adminSaveNews);
+  const deleteFn = useServerFn(adminDeleteNews);
+  const { data = [], refetch } = useQuery({ queryKey: ["admin-news"], queryFn: () => listFn({ data: { password: ADMIN_PANEL_PASSWORD } }) });
   const [editing, setEditing] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
 
   const save = async (n: any) => {
-    const payload = { title: n.title, body: n.body, image_url: n.image_url || null };
-    const { error } = n.id ? await supabase.from("news").update(payload).eq("id", n.id) : await supabase.from("news").insert(payload);
-    if (error) return toast.error(error.message);
-    toast.success("Saqlandi"); setOpen(false); refetch();
+    try {
+      await saveFn({ data: { password: ADMIN_PANEL_PASSWORD, id: n.id, title: n.title, body: n.body, image_url: n.image_url || null } });
+      toast.success("Saqlandi"); setOpen(false); refetch();
+    } catch { toast.error("Saqlashda xatolik. Qayta urinib ko'ring."); }
   };
 
   return (
@@ -144,7 +147,7 @@ function NewsAdmin() {
             <div className="flex-1 min-w-0"><h3 className="font-medium truncate">{n.title}</h3><p className="text-xs text-muted-foreground line-clamp-2">{n.body}</p></div>
             <div className="flex flex-col gap-1">
               <Button size="icon" variant="ghost" onClick={() => { setEditing(n); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await supabase.from("news").delete().eq("id", n.id); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await deleteFn({ data: { password: ADMIN_PANEL_PASSWORD, id: n.id } }); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
             </div>
           </Card>
         ))}
