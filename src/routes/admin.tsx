@@ -94,12 +94,17 @@ function ImageInput({ value, onChange }: { value: string; onChange: (v: string) 
       <Input placeholder="Rasm URL" value={value} onChange={(e) => onChange(e.target.value)} />
       <Input type="file" accept="image/*" disabled={busy} onChange={async (e) => {
         const f = e.target.files?.[0]; if (!f) return;
-        setBusy(true);
-        const base64 = await fileToBase64(f);
-        const { url } = await uploadFn({ data: { password: ADMIN_PANEL_PASSWORD, file_name: f.name, content_type: f.type || "application/octet-stream", base64 } });
-        setBusy(false);
-        if (url) onChange(url);
-      }} onError={() => { setBusy(false); toast.error("Rasm yuklashda xatolik"); }} />
+        try {
+          setBusy(true);
+          const base64 = await fileToBase64(f);
+          const { url } = await uploadFn({ data: { password: ADMIN_PANEL_PASSWORD, file_name: f.name, content_type: f.type || "application/octet-stream", base64 } });
+          if (url) onChange(url);
+        } catch (err: any) {
+          toast.error(err.message || "Rasm yuklashda xatolik");
+        } finally {
+          setBusy(false);
+        }
+      }} />
       {value && <img src={value} alt="" className="h-20 rounded object-cover" />}
     </div>
   );
