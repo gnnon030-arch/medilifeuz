@@ -158,15 +158,18 @@ function NewsAdmin() {
 
 /* ---------------- MEDICINES ---------------- */
 function MedicinesAdmin() {
-  const { data = [], refetch } = useQuery({ queryKey: ["admin-meds"], queryFn: async () => (await supabase.from("medicines").select("*").order("created_at", { ascending: false })).data ?? [] });
+  const listFn = useServerFn(adminListMedicines);
+  const saveFn = useServerFn(adminSaveMedicine);
+  const deleteFn = useServerFn(adminDeleteMedicine);
+  const { data = [], refetch } = useQuery({ queryKey: ["admin-meds"], queryFn: () => listFn({ data: { password: ADMIN_PANEL_PASSWORD } }) });
   const [editing, setEditing] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
 
   const save = async (m: any) => {
-    const payload = { name: m.name, description: m.description, image_url: m.image_url || null, price: Number(m.price) || 0, unit: m.unit, stock: parseInt(m.stock) || 0 };
-    const { error } = m.id ? await supabase.from("medicines").update(payload).eq("id", m.id) : await supabase.from("medicines").insert(payload);
-    if (error) return toast.error(error.message);
-    toast.success("Saqlandi"); setOpen(false); refetch();
+    try {
+      await saveFn({ data: { password: ADMIN_PANEL_PASSWORD, id: m.id, name: m.name, description: m.description, image_url: m.image_url || null, price: Number(m.price) || 0, unit: m.unit, stock: parseInt(m.stock) || 0 } });
+      toast.success("Saqlandi"); setOpen(false); refetch();
+    } catch { toast.error("Saqlashda xatolik. Qayta urinib ko'ring."); }
   };
 
   return (
@@ -198,7 +201,7 @@ function MedicinesAdmin() {
             </div>
             <div className="flex flex-col gap-1">
               <Button size="icon" variant="ghost" onClick={() => { setEditing(m); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await supabase.from("medicines").delete().eq("id", m.id); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await deleteFn({ data: { password: ADMIN_PANEL_PASSWORD, id: m.id } }); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
             </div>
           </Card>
         ))}
