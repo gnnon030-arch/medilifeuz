@@ -263,11 +263,14 @@ function BranchesAdmin() {
 
 /* ---------------- ORDERS ---------------- */
 function OrdersAdmin() {
-  const { data = [], refetch } = useQuery({ queryKey: ["admin-orders"], queryFn: async () => (await supabase.from("orders").select("*, order_items(*)").order("created_at", { ascending: false })).data ?? [] });
+  const listFn = useServerFn(adminListOrders);
+  const statusFn = useServerFn(adminSetOrderStatus);
+  const { data = [], refetch } = useQuery({ queryKey: ["admin-orders"], queryFn: () => listFn({ data: { password: ADMIN_PANEL_PASSWORD } }) });
   const setStatus = async (id: string, status: string) => {
-    const { error } = await supabase.from("orders").update({ status }).eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success("Holat o'zgartirildi"); refetch();
+    try {
+      await statusFn({ data: { password: ADMIN_PANEL_PASSWORD, id, status: status as any } });
+      toast.success("Holat o'zgartirildi"); refetch();
+    } catch { toast.error("Holatni o'zgartirishda xatolik"); }
   };
 
   return (
