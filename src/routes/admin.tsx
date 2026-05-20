@@ -77,14 +77,17 @@ function AdminPage() {
   );
 }
 
-async function uploadFile(file: File): Promise<string | null> {
-  const path = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-  const { error } = await supabase.storage.from("media").upload(path, file);
-  if (error) { toast.error(error.message); return null; }
-  return supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
+async function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
+    reader.onerror = () => reject(new Error("Rasmni o'qib bo'lmadi"));
+    reader.readAsDataURL(file);
+  });
 }
 
 function ImageInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const uploadFn = useServerFn(adminUploadMedia);
   const [busy, setBusy] = useState(false);
   return (
     <div className="space-y-2">
@@ -92,10 +95,11 @@ function ImageInput({ value, onChange }: { value: string; onChange: (v: string) 
       <Input type="file" accept="image/*" disabled={busy} onChange={async (e) => {
         const f = e.target.files?.[0]; if (!f) return;
         setBusy(true);
-        const url = await uploadFile(f);
+        const base64 = await fileToBase64(f);
+        const { url } = await uploadFn({ data: { password: ADMIN_PANEL_PASSWORD, file_name: f.name, content_type: f.type || "application/octet-stream", base64 } });
         setBusy(false);
         if (url) onChange(url);
-      }} />
+      }} onError={() => { setBusy(false); toast.error("Rasm yuklashda xatolik"); }} />
       {value && <img src={value} alt="" className="h-20 rounded object-cover" />}
     </div>
   );
