@@ -88,10 +88,10 @@ function Home() {
     <div className="container mx-auto px-6 md:px-10 lg:px-16 py-8 space-y-16">
       {/* Hero */}
       <section className="grid md:grid-cols-2 gap-10 items-center py-10 md:py-16">
-        <div className="space-y-6 md:pl-4 lg:pl-8">
+        <div className="space-y-6 md:pl-12 lg:pl-24">
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-[1.05]">
-            <span className="text-primary text-7xl">MediLife</span>
-            <span className="block mt-2 text-6xl">— {t("home.hero_title")}</span>
+            <span className="text-primary text-7xl md:text-8xl lg:text-9xl">MediLife</span>
+            <span className="block mt-2 text-5xl md:text-6xl lg:text-7xl"> {t("home.hero_title")}</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-xl">{t("home.hero_sub")}</p>
           <div className="flex flex-wrap gap-3">
@@ -102,7 +102,7 @@ function Home() {
         <div className="flex justify-center">
           <div className="relative">
             <div className="absolute inset-0 gradient-primary rounded-full blur-3xl opacity-40 scale-110" />
-            <img src={logo} alt="MediLife" className="relative w-80 h-80 md:w-[420px] md:h-[420px] lg:w-[480px] lg:h-[480px] object-cover rounded-3xl shadow-2xl" />
+            <img src={logo} alt="MediLife" className="relative w-80 h-80 md:w-[500px] md:h-[500px] lg:w-[600px] lg:h-[600px] object-cover rounded-3xl shadow-2xl" />
           </div>
         </div>
       </section>
