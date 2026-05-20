@@ -212,15 +212,18 @@ function MedicinesAdmin() {
 
 /* ---------------- BRANCHES ---------------- */
 function BranchesAdmin() {
-  const { data = [], refetch } = useQuery({ queryKey: ["admin-branches"], queryFn: async () => (await supabase.from("branches").select("*").order("created_at", { ascending: false })).data ?? [] });
+  const listFn = useServerFn(adminListBranches);
+  const saveFn = useServerFn(adminSaveBranch);
+  const deleteFn = useServerFn(adminDeleteBranch);
+  const { data = [], refetch } = useQuery({ queryKey: ["admin-branches"], queryFn: () => listFn({ data: { password: ADMIN_PANEL_PASSWORD } }) });
   const [editing, setEditing] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
 
   const save = async (b: any) => {
-    const payload = { name: b.name, image_url: b.image_url || null, phone: b.phone, address: b.address, map_url: b.map_url };
-    const { error } = b.id ? await supabase.from("branches").update(payload).eq("id", b.id) : await supabase.from("branches").insert(payload);
-    if (error) return toast.error(error.message);
-    toast.success("Saqlandi"); setOpen(false); refetch();
+    try {
+      await saveFn({ data: { password: ADMIN_PANEL_PASSWORD, id: b.id, name: b.name, image_url: b.image_url || null, phone: b.phone, address: b.address, map_url: b.map_url } });
+      toast.success("Saqlandi"); setOpen(false); refetch();
+    } catch { toast.error("Saqlashda xatolik. Qayta urinib ko'ring."); }
   };
 
   return (
@@ -249,7 +252,7 @@ function BranchesAdmin() {
             </div>
             <div className="flex flex-col gap-1">
               <Button size="icon" variant="ghost" onClick={() => { setEditing(b); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await supabase.from("branches").delete().eq("id", b.id); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await deleteFn({ data: { password: ADMIN_PANEL_PASSWORD, id: b.id } }); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
             </div>
           </Card>
         ))}
