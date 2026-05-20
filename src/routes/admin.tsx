@@ -12,9 +12,25 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
 import { ADMIN_PANEL_PASSWORD, isAdminUnlocked, setAdminUnlocked } from "@/lib/admin";
-import { adminListUsers, adminResetPassword, adminUpdateUser, adminDeleteUser } from "@/lib/admin.functions";
+import {
+  adminDeleteBranch,
+  adminDeleteMedicine,
+  adminDeleteNews,
+  adminDeleteUser,
+  adminListBranches,
+  adminListMedicines,
+  adminListNews,
+  adminListOrders,
+  adminListUsers,
+  adminResetPassword,
+  adminSaveBranch,
+  adminSaveMedicine,
+  adminSaveNews,
+  adminSetOrderStatus,
+  adminUpdateUser,
+  adminUploadMedia,
+} from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
@@ -61,24 +77,33 @@ function AdminPage() {
   );
 }
 
-async function uploadFile(file: File): Promise<string | null> {
-  const path = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-  const { error } = await supabase.storage.from("media").upload(path, file);
-  if (error) { toast.error(error.message); return null; }
-  return supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
+async function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
+    reader.onerror = () => reject(new Error("Rasmni o'qib bo'lmadi"));
+    reader.readAsDataURL(file);
+  });
 }
 
 function ImageInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const uploadFn = useServerFn(adminUploadMedia);
   const [busy, setBusy] = useState(false);
   return (
     <div className="space-y-2">
       <Input placeholder="Rasm URL" value={value} onChange={(e) => onChange(e.target.value)} />
       <Input type="file" accept="image/*" disabled={busy} onChange={async (e) => {
         const f = e.target.files?.[0]; if (!f) return;
-        setBusy(true);
-        const url = await uploadFile(f);
-        setBusy(false);
-        if (url) onChange(url);
+        try {
+          setBusy(true);
+          const base64 = await fileToBase64(f);
+          const { url } = await uploadFn({ data: { password: ADMIN_PANEL_PASSWORD, file_name: f.name, content_type: f.type || "application/octet-stream", base64 } });
+          if (url) onChange(url);
+        } catch (err: any) {
+          toast.error(err.message || "Rasm yuklashda xatolik");
+        } finally {
+          setBusy(false);
+        }
       }} />
       {value && <img src={value} alt="" className="h-20 rounded object-cover" />}
     </div>
@@ -87,15 +112,18 @@ function ImageInput({ value, onChange }: { value: string; onChange: (v: string) 
 
 /* ---------------- NEWS ---------------- */
 function NewsAdmin() {
-  const { data = [], refetch } = useQuery({ queryKey: ["admin-news"], queryFn: async () => (await supabase.from("news").select("*").order("created_at", { ascending: false })).data ?? [] });
+  const listFn = useServerFn(adminListNews);
+  const saveFn = useServerFn(adminSaveNews);
+  const deleteFn = useServerFn(adminDeleteNews);
+  const { data = [], refetch } = useQuery({ queryKey: ["admin-news"], queryFn: () => listFn({ data: { password: ADMIN_PANEL_PASSWORD } }) });
   const [editing, setEditing] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
 
   const save = async (n: any) => {
-    const payload = { title: n.title, body: n.body, image_url: n.image_url || null };
-    const { error } = n.id ? await supabase.from("news").update(payload).eq("id", n.id) : await supabase.from("news").insert(payload);
-    if (error) return toast.error(error.message);
-    toast.success("Saqlandi"); setOpen(false); refetch();
+    try {
+      await saveFn({ data: { password: ADMIN_PANEL_PASSWORD, id: n.id, title: n.title, body: n.body, image_url: n.image_url || null } });
+      toast.success("Saqlandi"); setOpen(false); refetch();
+    } catch { toast.error("Saqlashda xatolik. Qayta urinib ko'ring."); }
   };
 
   return (
@@ -119,7 +147,7 @@ function NewsAdmin() {
             <div className="flex-1 min-w-0"><h3 className="font-medium truncate">{n.title}</h3><p className="text-xs text-muted-foreground line-clamp-2">{n.body}</p></div>
             <div className="flex flex-col gap-1">
               <Button size="icon" variant="ghost" onClick={() => { setEditing(n); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await supabase.from("news").delete().eq("id", n.id); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await deleteFn({ data: { password: ADMIN_PANEL_PASSWORD, id: n.id } }); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
             </div>
           </Card>
         ))}
@@ -130,15 +158,18 @@ function NewsAdmin() {
 
 /* ---------------- MEDICINES ---------------- */
 function MedicinesAdmin() {
-  const { data = [], refetch } = useQuery({ queryKey: ["admin-meds"], queryFn: async () => (await supabase.from("medicines").select("*").order("created_at", { ascending: false })).data ?? [] });
+  const listFn = useServerFn(adminListMedicines);
+  const saveFn = useServerFn(adminSaveMedicine);
+  const deleteFn = useServerFn(adminDeleteMedicine);
+  const { data = [], refetch } = useQuery({ queryKey: ["admin-meds"], queryFn: () => listFn({ data: { password: ADMIN_PANEL_PASSWORD } }) });
   const [editing, setEditing] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
 
   const save = async (m: any) => {
-    const payload = { name: m.name, description: m.description, image_url: m.image_url || null, price: Number(m.price) || 0, unit: m.unit, stock: parseInt(m.stock) || 0 };
-    const { error } = m.id ? await supabase.from("medicines").update(payload).eq("id", m.id) : await supabase.from("medicines").insert(payload);
-    if (error) return toast.error(error.message);
-    toast.success("Saqlandi"); setOpen(false); refetch();
+    try {
+      await saveFn({ data: { password: ADMIN_PANEL_PASSWORD, id: m.id, name: m.name, description: m.description, image_url: m.image_url || null, price: Number(m.price) || 0, unit: m.unit, stock: parseInt(m.stock) || 0 } });
+      toast.success("Saqlandi"); setOpen(false); refetch();
+    } catch { toast.error("Saqlashda xatolik. Qayta urinib ko'ring."); }
   };
 
   return (
@@ -170,7 +201,7 @@ function MedicinesAdmin() {
             </div>
             <div className="flex flex-col gap-1">
               <Button size="icon" variant="ghost" onClick={() => { setEditing(m); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await supabase.from("medicines").delete().eq("id", m.id); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await deleteFn({ data: { password: ADMIN_PANEL_PASSWORD, id: m.id } }); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
             </div>
           </Card>
         ))}
@@ -181,15 +212,18 @@ function MedicinesAdmin() {
 
 /* ---------------- BRANCHES ---------------- */
 function BranchesAdmin() {
-  const { data = [], refetch } = useQuery({ queryKey: ["admin-branches"], queryFn: async () => (await supabase.from("branches").select("*").order("created_at", { ascending: false })).data ?? [] });
+  const listFn = useServerFn(adminListBranches);
+  const saveFn = useServerFn(adminSaveBranch);
+  const deleteFn = useServerFn(adminDeleteBranch);
+  const { data = [], refetch } = useQuery({ queryKey: ["admin-branches"], queryFn: () => listFn({ data: { password: ADMIN_PANEL_PASSWORD } }) });
   const [editing, setEditing] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
 
   const save = async (b: any) => {
-    const payload = { name: b.name, image_url: b.image_url || null, phone: b.phone, address: b.address, map_url: b.map_url };
-    const { error } = b.id ? await supabase.from("branches").update(payload).eq("id", b.id) : await supabase.from("branches").insert(payload);
-    if (error) return toast.error(error.message);
-    toast.success("Saqlandi"); setOpen(false); refetch();
+    try {
+      await saveFn({ data: { password: ADMIN_PANEL_PASSWORD, id: b.id, name: b.name, image_url: b.image_url || null, phone: b.phone, address: b.address, map_url: b.map_url } });
+      toast.success("Saqlandi"); setOpen(false); refetch();
+    } catch { toast.error("Saqlashda xatolik. Qayta urinib ko'ring."); }
   };
 
   return (
@@ -218,7 +252,7 @@ function BranchesAdmin() {
             </div>
             <div className="flex flex-col gap-1">
               <Button size="icon" variant="ghost" onClick={() => { setEditing(b); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await supabase.from("branches").delete().eq("id", b.id); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await deleteFn({ data: { password: ADMIN_PANEL_PASSWORD, id: b.id } }); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
             </div>
           </Card>
         ))}
@@ -229,11 +263,14 @@ function BranchesAdmin() {
 
 /* ---------------- ORDERS ---------------- */
 function OrdersAdmin() {
-  const { data = [], refetch } = useQuery({ queryKey: ["admin-orders"], queryFn: async () => (await supabase.from("orders").select("*, order_items(*)").order("created_at", { ascending: false })).data ?? [] });
+  const listFn = useServerFn(adminListOrders);
+  const statusFn = useServerFn(adminSetOrderStatus);
+  const { data = [], refetch } = useQuery({ queryKey: ["admin-orders"], queryFn: () => listFn({ data: { password: ADMIN_PANEL_PASSWORD } }) });
   const setStatus = async (id: string, status: string) => {
-    const { error } = await supabase.from("orders").update({ status }).eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success("Holat o'zgartirildi"); refetch();
+    try {
+      await statusFn({ data: { password: ADMIN_PANEL_PASSWORD, id, status: status as any } });
+      toast.success("Holat o'zgartirildi"); refetch();
+    } catch { toast.error("Holatni o'zgartirishda xatolik"); }
   };
 
   return (
