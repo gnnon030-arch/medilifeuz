@@ -1,12 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -20,31 +20,43 @@ export const Route = createFileRoute("/savatcha")({
   head: () => ({ meta: [{ title: "Savatcha — MediLife" }] }),
 });
 
-const COURIER_HOURS_FREE = "10:00–22:00";
-
 function isOffHoursNamangan(): boolean {
-  // Asia/Tashkent (UTC+5). Free window 10:00–22:00
   const fmt = new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone: "Asia/Tashkent" });
   const h = parseInt(fmt.format(new Date()), 10);
   return h < 10 || h >= 22;
 }
 
+function formatNamanganTime(d: Date): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Tashkent",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(d);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  return `${get("day")}.${get("month")}.${get("year")} ${get("hour")}:${get("minute")}`;
+}
+
 function CartPage() {
   const { t } = useTranslation();
-  const { items, add, remove, setQty, clear, total } = useCart();
+  const { items, add, remove, setQty, clear, total, count } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const [now, setNow] = useState(new Date());
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000 * 30);
+    const id = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(id);
   }, []);
-  const timeStr = new Intl.DateTimeFormat("uz-UZ", { timeZone: "Asia/Tashkent", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "long" }).format(now);
+  const timeStr = useMemo(() => formatNamanganTime(now), [now]);
 
+  const [tab, setTab] = useState<"cart" | "checkout">("cart");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("+998 ");
-  const [delivery, setDelivery] = useState<"pickup" | "courier">("courier");
+  const [wantCourier, setWantCourier] = useState(true);
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -53,9 +65,19 @@ function CartPage() {
     if (user?.phone) setPhone(formatPhone(user.phone));
   }, [user]);
 
+  useEffect(() => {
+    if (items.length === 0 && tab === "checkout") setTab("cart");
+  }, [items.length, tab]);
+
   const offHours = isOffHoursNamangan();
-  const courierFee = delivery === "courier" && offHours ? 20000 : 0;
+  const courierFee = wantCourier && offHours ? 20000 : 0;
   const grand = total + courierFee;
+  const isEmpty = items.length === 0;
+
+  const goCheckout = () => {
+    if (isEmpty) return;
+    setTab("checkout");
+  };
 
   const submit = async () => {
     if (!user) {
@@ -65,7 +87,7 @@ function CartPage() {
     }
     if (!name.trim()) return toast.error("Ismni kiriting");
     if (!isValidPhone(phone)) return toast.error(t("auth.phone_invalid"));
-    if (items.length === 0) return;
+    if (isEmpty) return;
     setSubmitting(true);
     try {
       const res = await placeOrder({
@@ -73,7 +95,7 @@ function CartPage() {
           user_id: user.id,
           customer_name: name.trim(),
           customer_phone: phone,
-          delivery_type: delivery,
+          delivery_type: wantCourier ? "courier" : "pickup",
           delivery_fee: courierFee,
           note: note || null,
           items: items.map((i) => ({
@@ -97,16 +119,18 @@ function CartPage() {
   return (
     <div className="container mx-auto px-4 py-10 max-w-4xl">
       <h1 className="text-4xl font-bold mb-2">{t("nav.cart")}</h1>
-      <p className="text-sm text-muted-foreground mb-6">{t("cart.current_time")}: <span className="font-medium text-foreground">{timeStr}</span></p>
+      <p className="text-sm text-muted-foreground mb-6">
+        {t("cart.current_time")}: <span className="font-medium text-foreground">{timeStr}</span>
+      </p>
 
-      <Tabs defaultValue="cart">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs value={tab} onValueChange={(v) => setTab(v as "cart" | "checkout")}>
+        <TabsList className={isEmpty ? "grid w-full grid-cols-1" : "grid w-full grid-cols-2"}>
           <TabsTrigger value="cart">{t("nav.cart")}</TabsTrigger>
-          <TabsTrigger value="checkout">{t("cart.checkout")}</TabsTrigger>
+          {!isEmpty && <TabsTrigger value="checkout">{t("cart.checkout")}</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="cart" className="space-y-3 mt-6">
-          {items.length === 0 ? (
+          {isEmpty ? (
             <p className="text-muted-foreground text-center py-12">{t("cart.empty")}</p>
           ) : (
             <>
@@ -117,7 +141,12 @@ function CartPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium truncate">{i.name}</h3>
-                    <p className="text-sm text-muted-foreground">{i.unit} · {i.price.toLocaleString()} {t("common.sum")}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {i.quantity} {i.unit} · {i.price.toLocaleString()} {t("common.sum")}
+                    </p>
+                    <p className="text-sm font-semibold text-primary">
+                      = {(i.price * i.quantity).toLocaleString()} {t("common.sum")}
+                    </p>
                   </div>
                   <div className="flex items-center gap-1">
                     <Button size="icon" variant="outline" onClick={() => remove(i.id)}><Minus className="h-4 w-4" /></Button>
@@ -127,22 +156,49 @@ function CartPage() {
                   </div>
                 </Card>
               ))}
-              <Card className="p-4 mt-4">
+
+              <Card className="p-4 mt-4 space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Jami dorilar:</span>
+                  <span className="font-medium">{count} dona</span>
+                </div>
                 <div className="flex justify-between text-lg font-semibold">
                   <span>{t("cart.subtotal")}:</span>
                   <span>{total.toLocaleString()} {t("common.sum")}</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-2">🚚 {t("cart.free_courier")} ({COURIER_HOURS_FREE})</p>
-                {offHours && <p className="text-sm text-destructive mt-1">⚠️ {t("cart.outside_hours")}</p>}
+
+                <div className="border-t pt-3">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <Checkbox checked={wantCourier} onCheckedChange={(v) => setWantCourier(!!v)} className="mt-0.5" />
+                    <div className="flex-1">
+                      <div className="font-medium">🚚 Yetkazib berish xizmati</div>
+                      <div className="text-sm text-muted-foreground">
+                        10:00–22:00 oralig'ida <span className="text-primary font-semibold">bepul</span>, boshqa vaqtda <span className="text-destructive font-semibold">+20 000 so'm</span>
+                      </div>
+                      {wantCourier && (
+                        <div className="text-sm mt-1">
+                          Hozir: {offHours ? <span className="text-destructive font-semibold">+20 000 so'm</span> : <span className="text-primary font-semibold">bepul</span>}
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                </div>
+
+                <div className="flex justify-between text-lg font-bold pt-3 border-t">
+                  <span>{t("cart.total")}:</span>
+                  <span>{grand.toLocaleString()} {t("common.sum")}</span>
+                </div>
+
+                <Button onClick={goCheckout} disabled={isEmpty} size="lg" className="w-full">
+                  {t("cart.submit")}
+                </Button>
               </Card>
             </>
           )}
         </TabsContent>
 
-        <TabsContent value="checkout" className="space-y-4 mt-6">
-          {items.length === 0 ? (
-            <p className="text-muted-foreground text-center py-12">{t("cart.empty")}</p>
-          ) : (
+        {!isEmpty && (
+          <TabsContent value="checkout" className="space-y-4 mt-6">
             <Card className="p-6 space-y-4">
               <div className="space-y-2">
                 <Label>{t("auth.full_name")}</Label>
@@ -156,26 +212,46 @@ function CartPage() {
                 <Label>Eslatma (ixtiyoriy)</Label>
                 <Textarea value={note} onChange={(e) => setNote(e.target.value.slice(0, 500))} rows={3} />
               </div>
-              <div className="space-y-2">
-                <Label>Yetkazib berish</Label>
-                <RadioGroup value={delivery} onValueChange={(v) => setDelivery(v as any)}>
-                  <div className="flex items-center gap-2"><RadioGroupItem value="pickup" id="pickup" /><Label htmlFor="pickup" className="cursor-pointer">{t("cart.pickup")}</Label></div>
-                  <div className="flex items-center gap-2"><RadioGroupItem value="courier" id="courier" /><Label htmlFor="courier" className="cursor-pointer">{t("cart.courier")}</Label></div>
-                </RadioGroup>
+
+              <div className="border-t pt-3 space-y-2">
+                <Label>Buyurtma ro'yxati</Label>
+                <ul className="text-sm space-y-1">
+                  {items.map((i) => (
+                    <li key={i.id} className="flex justify-between gap-2">
+                      <span className="truncate">{i.name} × {i.quantity}</span>
+                      <span className="font-medium shrink-0">{(i.price * i.quantity).toLocaleString()} {t("common.sum")}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
 
               <div className="border-t pt-4 space-y-1">
-                <div className="flex justify-between text-sm"><span>{t("cart.subtotal")}</span><span>{total.toLocaleString()}</span></div>
-                <div className="flex justify-between text-sm"><span>{t("cart.delivery_fee")}</span><span>{courierFee.toLocaleString()}</span></div>
-                <div className="flex justify-between text-lg font-bold pt-2 border-t"><span>{t("cart.total")}</span><span>{grand.toLocaleString()} {t("common.sum")}</span></div>
+                <div className="flex justify-between text-sm">
+                  <span>{t("cart.subtotal")}</span>
+                  <span>{total.toLocaleString()} {t("common.sum")}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>{t("cart.delivery_fee")}</span>
+                  <span>
+                    {wantCourier
+                      ? offHours
+                        ? <span className="text-destructive font-semibold">+20 000 {t("common.sum")}</span>
+                        : <span className="text-primary font-semibold">Bepul</span>
+                      : <span className="text-muted-foreground">O'zim olib ketaman</span>}
+                  </span>
+                </div>
+                <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                  <span>{t("cart.total")}</span>
+                  <span>{grand.toLocaleString()} {t("common.sum")}</span>
+                </div>
               </div>
 
               <Button onClick={submit} disabled={submitting} size="lg" className="w-full">
-                {submitting ? t("common.loading") : t("cart.submit")}
+                {submitting ? t("common.loading") : "Tasdiqlash"}
               </Button>
             </Card>
-          )}
-        </TabsContent>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
