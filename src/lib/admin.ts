@@ -1,5 +1,5 @@
 export const ADMIN_PANEL_PASSWORD = "123654999";
-export const GOOGLE_MAPS_API_KEY = "AIzaSyAeRL5ugx-QH2mDRf1RjxTW-XVKsYc7wm8";
+export const GOOGLE_MAPS_API_KEY = "AIzaSyAvsX6Zue-IUqhKQh2ocJ3A2EkQF9Sj70E";
 export const ADMIN_UNLOCK_KEY = "medilife-admin-unlock-v1";
 
 export function isAdminUnlocked(): boolean {
