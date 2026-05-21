@@ -91,7 +91,7 @@ function Home() {
         <div className="space-y-6 ml-5">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05]">
             <span className="text-primary">MediLife</span>
-            <span className="block mt-2">— {t("home.hero_title")}</span>
+            <span className="block mt-2">{t("home.hero_title")}</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-xl">{t("home.hero_sub")}</p>
           <div className="flex flex-nowrap gap-3">
