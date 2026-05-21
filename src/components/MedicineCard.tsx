@@ -19,6 +19,7 @@ export type Medicine = {
 export function MedicineCard({ m }: { m: Medicine }) {
   const { t } = useTranslation();
   const { items, add, remove } = useCart();
+  const navigate = useNavigate();
   const inCart = items.find((x) => x.id === m.id);
   const qty = inCart?.quantity ?? 0;
 
@@ -28,7 +29,13 @@ export function MedicineCard({ m }: { m: Medicine }) {
       return;
     }
     add({ id: m.id, name: m.name, price: Number(m.price), unit: m.unit, image_url: m.image_url });
-    toast.success(`${m.name} — ${t("cart.add")}`);
+    toast.success(`${m.name} — ${t("cart.add")}`, {
+      duration: 5000,
+      action: {
+        label: t("nav.cart"),
+        onClick: () => navigate({ to: "/savatcha" }),
+      },
+    });
   };
 
   const onRemove = () => {
