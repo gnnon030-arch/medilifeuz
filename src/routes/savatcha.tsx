@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -14,17 +13,12 @@ import { useCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { formatPhone, isValidPhone } from "@/lib/phone";
 import { placeOrder } from "@/lib/orders.functions";
+import { YandexAddressPicker } from "@/components/YandexAddressPicker";
 
 export const Route = createFileRoute("/savatcha")({
   component: CartPage,
   head: () => ({ meta: [{ title: "Savatcha — MediLife" }] }),
 });
-
-function isOffHoursNamangan(): boolean {
-  const fmt = new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone: "Asia/Tashkent" });
-  const h = parseInt(fmt.format(new Date()), 10);
-  return h < 10 || h >= 22;
-}
 
 function formatNamanganTime(d: Date): string {
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -56,7 +50,8 @@ function CartPage() {
   const [tab, setTab] = useState<"cart" | "checkout">("cart");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("+998 ");
-  const [wantCourier, setWantCourier] = useState(true);
+  const [addressText, setAddressText] = useState("");
+  const [addressMap, setAddressMap] = useState("");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -69,8 +64,7 @@ function CartPage() {
     if (items.length === 0 && tab === "checkout") setTab("cart");
   }, [items.length, tab]);
 
-  const offHours = isOffHoursNamangan();
-  const courierFee = wantCourier && offHours ? 20000 : 0;
+  const courierFee = 0;
   const grand = total + courierFee;
   const isEmpty = items.length === 0;
 
@@ -87,6 +81,8 @@ function CartPage() {
     }
     if (!name.trim()) return toast.error("Ismni kiriting");
     if (!isValidPhone(phone)) return toast.error(t("auth.phone_invalid"));
+    const finalAddress = [addressText.trim(), addressMap.trim()].filter(Boolean).join(" | ");
+    if (!finalAddress) return toast.error(t("cart.address_text"));
     if (isEmpty) return;
     setSubmitting(true);
     try {
@@ -95,8 +91,9 @@ function CartPage() {
           user_id: user.id,
           customer_name: name.trim(),
           customer_phone: phone,
-          delivery_type: wantCourier ? "courier" : "pickup",
+          delivery_type: "courier",
           delivery_fee: courierFee,
+          address: finalAddress,
           note: note || null,
           items: items.map((i) => ({
             medicine_id: i.id,
@@ -167,21 +164,9 @@ function CartPage() {
                   <span>{total.toLocaleString()} {t("common.sum")}</span>
                 </div>
 
-                <div className="border-t pt-3">
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <Checkbox checked={wantCourier} onCheckedChange={(v) => setWantCourier(!!v)} className="mt-0.5" />
-                    <div className="flex-1">
-                      <div className="font-medium">🚚 Yetkazib berish xizmati</div>
-                      <div className="text-sm text-muted-foreground">
-                        10:00–22:00 oralig'ida <span className="text-primary font-semibold">bepul</span>, boshqa vaqtda <span className="text-destructive font-semibold">+20 000 so'm</span>
-                      </div>
-                      {wantCourier && (
-                        <div className="text-sm mt-1">
-                          Hozir: {offHours ? <span className="text-destructive font-semibold">+20 000 so'm</span> : <span className="text-primary font-semibold">bepul</span>}
-                        </div>
-                      )}
-                    </div>
-                  </label>
+                <div className="border-t pt-3 text-sm">
+                  <div className="font-medium">🚚 {t("cart.delivery_only")}</div>
+                  <div className="text-primary font-semibold mt-1">{t("cart.delivery_free_city")}</div>
                 </div>
 
                 <div className="flex justify-between text-lg font-bold pt-3 border-t">
@@ -208,13 +193,29 @@ function CartPage() {
                 <Label>{t("auth.phone")}</Label>
                 <Input value={phone} onChange={(e) => setPhone(formatPhone(e.target.value))} placeholder="+998 90 123 45 67" />
               </div>
+
               <div className="space-y-2">
-                <Label>Eslatma (ixtiyoriy)</Label>
+                <Label>{t("cart.address_text")}</Label>
+                <Input value={addressText} onChange={(e) => setAddressText(e.target.value.slice(0, 300))} placeholder={t("cart.address_text_ph")} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t("cart.address_map")}</Label>
+                <YandexAddressPicker onPick={(addr) => setAddressMap(addr)} />
+                {addressMap && (
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">{t("cart.address_picked")}:</span> <span className="font-medium">{addressMap}</span>
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t("cart.note_ph")}</Label>
                 <Textarea value={note} onChange={(e) => setNote(e.target.value.slice(0, 500))} rows={3} />
               </div>
 
               <div className="border-t pt-3 space-y-2">
-                <Label>Buyurtma ro'yxati</Label>
+                <Label>{t("cart.order_list")}</Label>
                 <ul className="text-sm space-y-1">
                   {items.map((i) => (
                     <li key={i.id} className="flex justify-between gap-2">
@@ -232,13 +233,7 @@ function CartPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>{t("cart.delivery_fee")}</span>
-                  <span>
-                    {wantCourier
-                      ? offHours
-                        ? <span className="text-destructive font-semibold">+20 000 {t("common.sum")}</span>
-                        : <span className="text-primary font-semibold">Bepul</span>
-                      : <span className="text-muted-foreground">O'zim olib ketaman</span>}
-                  </span>
+                  <span className="text-primary font-semibold">{t("cart.delivery_free_city")}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold pt-2 border-t">
                   <span>{t("cart.total")}</span>
@@ -247,7 +242,7 @@ function CartPage() {
               </div>
 
               <Button onClick={submit} disabled={submitting} size="lg" className="w-full">
-                {submitting ? t("common.loading") : "Tasdiqlash"}
+                {submitting ? t("common.loading") : t("common.confirm")}
               </Button>
             </Card>
           </TabsContent>

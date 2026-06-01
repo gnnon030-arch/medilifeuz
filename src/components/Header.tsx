@@ -59,7 +59,8 @@ export function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => changeLang("uz")}>O'zbek</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => changeLang("uz_cyrl")}>Ўзбекча (Кирилл)</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => changeLang("uz")}>O'zbekcha (Lotin)</DropdownMenuItem>
               <DropdownMenuItem onClick={() => changeLang("ru")}>Русский</DropdownMenuItem>
               <DropdownMenuItem onClick={() => changeLang("en")}>English</DropdownMenuItem>
             </DropdownMenuContent>

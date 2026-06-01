@@ -15,6 +15,7 @@ const PlaceOrderSchema = z.object({
   customer_phone: z.string().trim().min(7).max(20),
   delivery_type: z.enum(["pickup", "courier"]),
   delivery_fee: z.number().nonnegative(),
+  address: z.string().trim().min(1).max(600),
   note: z.string().max(500).optional().nullable(),
   items: z.array(OrderItemSchema).min(1).max(50),
 });
@@ -36,6 +37,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         delivery_fee: data.delivery_fee,
         subtotal,
         total,
+        address: data.address,
         note: data.note ?? null,
         status: "pending",
       })
@@ -74,7 +76,8 @@ export const placeOrder = createServerFn({ method: "POST" })
         "🆕 <b>Yangi buyurtma — MediLife</b>",
         `👤 ${data.customer_name}`,
         `📞 ${data.customer_phone}`,
-        `🚚 ${data.delivery_type === "courier" ? "Kuryer" : "O'zi olib ketadi"}`,
+        `🚚 Yetkazib berish (shahar bo'ylab bepul)`,
+        `📍 ${data.address}`,
         "",
         "<b>Dorilar:</b>",
         ...data.items.map((i) => `• ${i.medicine_name} × ${i.quantity} = ${(i.unit_price * i.quantity).toLocaleString()} so'm`),
