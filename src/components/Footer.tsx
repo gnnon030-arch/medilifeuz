@@ -1,32 +1,28 @@
-import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Phone, Mail, MapPin } from "lucide-react";
 import logo from "@/assets/medilife-logo.jpg";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ADMIN_PANEL_PASSWORD, setAdminUnlocked } from "@/lib/admin";
+import { useAuth } from "@/hooks/use-auth";
 
 export function Footer() {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const [pwd, setPwd] = useState("");
   const navigate = useNavigate();
+  const { isAdmin, user } = useAuth();
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pwd === ADMIN_PANEL_PASSWORD) {
-      setAdminUnlocked(true);
-      setOpen(false);
-      setPwd("");
-      toast.success("Admin panelga kirildi");
-      navigate({ to: "/admin" });
-    } else {
-      toast.error("Noto'g'ri parol");
+  const openAdmin = () => {
+    if (!user) {
+      toast.error("Avval tizimga kiring");
+      navigate({ to: "/login" });
+      return;
     }
+    if (!isAdmin) {
+      toast.error("Sizda admin huquqi yo'q");
+      return;
+    }
+    navigate({ to: "/admin" });
   };
+
 
   return (
     <footer className="border-t bg-card mt-16">
@@ -51,7 +47,7 @@ export function Footer() {
           <p className="text-sm text-muted-foreground">{t("footer.manager_name")}</p>
           <button
             type="button"
-            onClick={() => setOpen(true)}
+            onClick={openAdmin}
             className="text-sm text-muted-foreground mt-4 hover:text-foreground transition-colors cursor-default select-none"
             title=""
           >
@@ -60,21 +56,6 @@ export function Footer() {
         </div>
       </div>
 
-      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setPwd(""); }}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Admin panel</DialogTitle></DialogHeader>
-          <form onSubmit={submit} className="space-y-3">
-            <Input
-              type="password"
-              placeholder="Parol"
-              autoFocus
-              value={pwd}
-              onChange={(e) => setPwd(e.target.value)}
-            />
-            <Button type="submit" className="w-full">Kirish</Button>
-          </form>
-        </DialogContent>
-      </Dialog>
     </footer>
   );
 }
