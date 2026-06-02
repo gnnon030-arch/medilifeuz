@@ -1,32 +1,28 @@
-import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Phone, Mail, MapPin } from "lucide-react";
 import logo from "@/assets/medilife-logo.jpg";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ADMIN_PANEL_PASSWORD, setAdminUnlocked } from "@/lib/admin";
+import { useAuth } from "@/hooks/use-auth";
 
 export function Footer() {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const [pwd, setPwd] = useState("");
   const navigate = useNavigate();
+  const { isAdmin, user } = useAuth();
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pwd === ADMIN_PANEL_PASSWORD) {
-      setAdminUnlocked(true);
-      setOpen(false);
-      setPwd("");
-      toast.success("Admin panelga kirildi");
-      navigate({ to: "/admin" });
-    } else {
-      toast.error("Noto'g'ri parol");
+  const openAdmin = () => {
+    if (!user) {
+      toast.error("Avval tizimga kiring");
+      navigate({ to: "/login" });
+      return;
     }
+    if (!isAdmin) {
+      toast.error("Sizda admin huquqi yo'q");
+      return;
+    }
+    navigate({ to: "/admin" });
   };
+
 
   return (
     <footer className="border-t bg-card mt-16">
