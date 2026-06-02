@@ -17,6 +17,7 @@ import {
   adminDeleteBranch,
   adminDeleteMedicine,
   adminDeleteNews,
+  adminDeleteOrder,
   adminDeleteUser,
   adminListBranches,
   adminListMedicines,
@@ -31,6 +32,7 @@ import {
   adminUpdateUser,
   adminUploadMedia,
 } from "@/lib/admin.functions";
+
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
