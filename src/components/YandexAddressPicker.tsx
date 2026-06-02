@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { MapPin } from "lucide-react";
+import { MapPin, LocateFixed } from "lucide-react";
+import { YANDEX_MAPS_API_KEY } from "@/lib/admin";
 
 declare global {
   interface Window {
@@ -11,7 +12,7 @@ declare global {
 }
 
 const SCRIPT_ID = "yandex-maps-js";
-const SCRIPT_SRC = "https://api-maps.yandex.ru/2.1/?lang=ru_RU";
+const SCRIPT_SRC = `https://api-maps.yandex.ru/2.1/?apikey=${YANDEX_MAPS_API_KEY}&lang=ru_RU`;
 
 function loadYmaps(): Promise<any> {
   return new Promise((resolve, reject) => {
@@ -41,6 +42,41 @@ export function YandexAddressPicker({ onPick }: { onPick: (address: string) => v
   const mapDiv = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const placemark = useRef<any>(null);
+  const ymapsRef = useRef<any>(null);
+
+  const setMarker = async (coords: number[]) => {
+    const ymaps = ymapsRef.current;
+    if (!ymaps || !mapInstance.current) return;
+    const res = await ymaps.geocode(coords);
+    const first = res.geoObjects.get(0);
+    const addr = first?.getAddressLine?.() ?? `${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}`;
+    setPicked(addr);
+    if (!placemark.current) {
+      placemark.current = new ymaps.Placemark(
+        coords,
+        { iconCaption: addr },
+        { preset: "islands#redDotIconWithCaption", draggable: true }
+      );
+      placemark.current.events.add("dragend", () => {
+        const c = placemark.current.geometry.getCoordinates();
+        setMarker(c);
+      });
+      mapInstance.current.geoObjects.add(placemark.current);
+    } else {
+      placemark.current.geometry.setCoordinates(coords);
+      placemark.current.properties.set("iconCaption", addr);
+    }
+    mapInstance.current.setCenter(coords);
+  };
+
+  const useMyLocation = () => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setMarker([pos.coords.latitude, pos.coords.longitude]),
+      () => {},
+      { enableHighAccuracy: true, timeout: 10_000 }
+    );
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -49,29 +85,14 @@ export function YandexAddressPicker({ onPick }: { onPick: (address: string) => v
     loadYmaps()
       .then((ymaps) => {
         if (cancelled || !mapDiv.current) return;
-        // Namangan center
-        const center = [40.9983, 71.6726];
+        ymapsRef.current = ymaps;
+        const center = [40.9983, 71.6726]; // Namangan
         mapInstance.current = new ymaps.Map(mapDiv.current, {
           center,
           zoom: 13,
           controls: ["zoomControl", "searchControl", "geolocationControl"],
         });
-
-        const resolveCoords = async (coords: number[]) => {
-          const res = await ymaps.geocode(coords);
-          const first = res.geoObjects.get(0);
-          const addr = first?.getAddressLine?.() ?? `${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}`;
-          setPicked(addr);
-          if (!placemark.current) {
-            placemark.current = new ymaps.Placemark(coords, { iconCaption: addr }, { preset: "islands#redDotIconWithCaption" });
-            mapInstance.current.geoObjects.add(placemark.current);
-          } else {
-            placemark.current.geometry.setCoordinates(coords);
-            placemark.current.properties.set("iconCaption", addr);
-          }
-        };
-
-        mapInstance.current.events.add("click", (e: any) => resolveCoords(e.get("coords")));
+        mapInstance.current.events.add("click", (e: any) => setMarker(e.get("coords")));
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -102,6 +123,12 @@ export function YandexAddressPicker({ onPick }: { onPick: (address: string) => v
           <DialogHeader>
             <DialogTitle>{t("cart.address_map")}</DialogTitle>
           </DialogHeader>
+          <div className="flex gap-2">
+            <Button type="button" variant="secondary" size="sm" onClick={useMyLocation} className="gap-2">
+              <LocateFixed className="h-4 w-4" /> {t("cart.my_location")}
+            </Button>
+            <p className="text-xs text-muted-foreground self-center">{t("cart.map_hint")}</p>
+          </div>
           <div ref={mapDiv} className="w-full h-[420px] rounded-md bg-muted" />
           {loading && <p className="text-sm text-muted-foreground">{t("common.loading")}</p>}
           {picked && (

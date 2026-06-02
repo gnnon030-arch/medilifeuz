@@ -31,22 +31,37 @@ function BranchesPage() {
         <div className="grid md:grid-cols-2 gap-6">
           {data.map((b: any) => {
             const q = encodeURIComponent(b.address || b.name || "Namangan");
-            const embedSrc = `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${q}`;
+            const mapType = b.map_type || "google";
+            let embedSrc: string | null = null;
+            if (mapType === "google") {
+              embedSrc = `https://www.google.com/maps?q=${q}&output=embed`;
+            } else if (mapType === "yandex") {
+              embedSrc = `https://yandex.uz/map-widget/v1/?text=${q}&z=15&l=map`;
+            }
             return (
               <Card key={b.id} className="overflow-hidden">
-                {b.image_url && <img src={b.image_url} alt={b.name} className="w-full h-48 object-cover" />}
+                {b.image_url && (
+                  <img
+                    src={b.image_url}
+                    alt={b.name}
+                    className="w-full h-48 object-cover"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                  />
+                )}
                 <div className="p-5 space-y-3">
                   <h3 className="text-xl font-semibold">{b.name}</h3>
                   {b.address && <p className="text-sm flex items-start gap-2"><MapPin className="h-4 w-4 mt-0.5 text-primary shrink-0" />{b.address}</p>}
                   {b.phone && <p className="text-sm flex items-center gap-2"><Phone className="h-4 w-4 text-primary" /><a href={`tel:${b.phone}`}>{b.phone}</a></p>}
-                  <div className="aspect-video rounded-md overflow-hidden border">
-                    <iframe
-                      src={embedSrc}
-                      width="100%" height="100%" style={{ border: 0 }} loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade" title={b.name}
-                      allowFullScreen
-                    />
-                  </div>
+                  {embedSrc && (
+                    <div className="aspect-video rounded-md overflow-hidden border">
+                      <iframe
+                        src={embedSrc}
+                        width="100%" height="100%" style={{ border: 0 }} loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade" title={b.name}
+                        allowFullScreen
+                      />
+                    </div>
+                  )}
                   {b.map_url && (
                     <a href={b.map_url} target="_blank" rel="noopener noreferrer">
                       <Button variant="outline" size="sm" className="gap-2"><ExternalLink className="h-4 w-4" /> {t("branches.view_map")}</Button>
@@ -61,3 +76,5 @@ function BranchesPage() {
     </div>
   );
 }
+// GOOGLE_MAPS_API_KEY kept imported in case of future embed-v1 usage
+void GOOGLE_MAPS_API_KEY;

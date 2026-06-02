@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Star } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { deleteMyOrder } from "@/lib/orders.functions";
+
 
 export const Route = createFileRoute("/buyurtmalarim")({
   component: OrdersPage,
@@ -61,6 +64,7 @@ function OrderRow({ order, onChanged }: { order: any; onChanged: () => void }) {
   const [comment, setComment] = useState("");
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const delFn = useServerFn(deleteMyOrder);
 
   const existingReview = order.reviews?.[0];
 
@@ -74,15 +78,32 @@ function OrderRow({ order, onChanged }: { order: any; onChanged: () => void }) {
     onChanged();
   };
 
+  const del = async () => {
+    if (!confirm(t("cart.delete_order") + "?")) return;
+    try {
+      await delFn({ data: { id: order.id } });
+      toast.success("O'chirildi");
+      onChanged();
+    } catch (e: any) { toast.error(e.message || "Xatolik"); }
+  };
+
   return (
     <Card className="p-4">
-      <div className="flex justify-between items-start mb-3">
-        <div>
+      <div className="flex justify-between items-start mb-3 gap-2">
+        <div className="min-w-0">
           <p className="text-sm text-muted-foreground">#{order.id.slice(0, 8)} · {new Date(order.created_at).toLocaleString()}</p>
           <p className="text-xs text-muted-foreground">{order.delivery_type === "courier" ? "Kuryer" : "O'zi olib ketadi"}</p>
         </div>
-        <Badge variant={statusVariant(order.status)}>{t(`orders.status.${order.status}`)}</Badge>
+        <div className="flex items-center gap-2 shrink-0">
+          <Badge variant={statusVariant(order.status)}>{t(`orders.status.${order.status}`)}</Badge>
+          {order.status === "delivered" && (
+            <Button size="icon" variant="ghost" onClick={del} title={t("cart.delete_order")}>
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          )}
+        </div>
       </div>
+
       <ul className="text-sm space-y-1 mb-3">
         {order.order_items?.map((i: any) => (
           <li key={i.id}>• {i.medicine_name} × {i.quantity} — {Number(i.line_total).toLocaleString()} so'm</li>

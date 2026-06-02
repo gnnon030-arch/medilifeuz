@@ -129,7 +129,9 @@ const BranchSchema = z.object({
   phone: z.string().max(40).nullable().optional(),
   address: z.string().max(500).nullable().optional(),
   map_url: z.string().max(1500).nullable().optional(),
+  map_type: z.enum(["text", "google", "yandex"]).optional(),
 });
+
 
 export const adminListBranches = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -146,7 +148,7 @@ export const adminSaveBranch = createServerFn({ method: "POST" })
   .inputValidator((i) => BranchSchema.parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
-    const payload = { name: data.name, image_url: data.image_url || null, phone: data.phone ?? null, address: data.address ?? null, map_url: data.map_url ?? null };
+    const payload = { name: data.name, image_url: data.image_url || null, phone: data.phone ?? null, address: data.address ?? null, map_url: data.map_url ?? null, map_type: data.map_type ?? "google" };
     const query = data.id ? supabaseAdmin.from("branches").update(payload).eq("id", data.id) : supabaseAdmin.from("branches").insert(payload);
     const { error } = await query;
     if (error) throw new Error(error.message);
@@ -263,6 +265,18 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminDeleteOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => IdSchema.parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    await supabaseAdmin.from("order_items").delete().eq("order_id", data.id);
+    await supabaseAdmin.from("reviews").delete().eq("order_id", data.id);
+    const { error } = await supabaseAdmin.from("orders").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
