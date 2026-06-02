@@ -47,7 +47,7 @@ export function Footer() {
           <p className="text-sm text-muted-foreground">{t("footer.manager_name")}</p>
           <button
             type="button"
-            onClick={() => setOpen(true)}
+            onClick={openAdmin}
             className="text-sm text-muted-foreground mt-4 hover:text-foreground transition-colors cursor-default select-none"
             title=""
           >
@@ -56,21 +56,6 @@ export function Footer() {
         </div>
       </div>
 
-      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setPwd(""); }}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Admin panel</DialogTitle></DialogHeader>
-          <form onSubmit={submit} className="space-y-3">
-            <Input
-              type="password"
-              placeholder="Parol"
-              autoFocus
-              value={pwd}
-              onChange={(e) => setPwd(e.target.value)}
-            />
-            <Button type="submit" className="w-full">Kirish</Button>
-          </form>
-        </DialogContent>
-      </Dialog>
     </footer>
   );
 }
