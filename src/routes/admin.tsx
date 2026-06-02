@@ -226,10 +226,11 @@ function BranchesAdmin() {
 
   const save = async (b: any) => {
     try {
-      await saveFn({ data: { id: b.id, name: b.name, image_url: b.image_url || null, phone: b.phone, address: b.address, map_url: b.map_url } });
+      await saveFn({ data: { id: b.id, name: b.name, image_url: b.image_url || null, phone: b.phone, address: b.address, map_url: b.map_url, map_type: b.map_type ?? "google" } });
       toast.success("Saqlandi"); setOpen(false); refetch();
     } catch { toast.error("Saqlashda xatolik. Qayta urinib ko'ring."); }
   };
+
 
   return (
     <div className="space-y-4">
