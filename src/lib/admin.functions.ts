@@ -148,7 +148,7 @@ export const adminSaveBranch = createServerFn({ method: "POST" })
   .inputValidator((i) => BranchSchema.parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
-    const payload = { name: data.name, image_url: data.image_url || null, phone: data.phone ?? null, address: data.address ?? null, map_url: data.map_url ?? null };
+    const payload = { name: data.name, image_url: data.image_url || null, phone: data.phone ?? null, address: data.address ?? null, map_url: data.map_url ?? null, map_type: data.map_type ?? "google" };
     const query = data.id ? supabaseAdmin.from("branches").update(payload).eq("id", data.id) : supabaseAdmin.from("branches").insert(payload);
     const { error } = await query;
     if (error) throw new Error(error.message);
