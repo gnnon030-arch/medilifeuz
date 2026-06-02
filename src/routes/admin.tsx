@@ -283,6 +283,7 @@ function BranchesAdmin() {
 function OrdersAdmin() {
   const listFn = useServerFn(adminListOrders);
   const statusFn = useServerFn(adminSetOrderStatus);
+  const delFn = useServerFn(adminDeleteOrder);
   const { data = [], refetch } = useQuery({ queryKey: ["admin-orders"], queryFn: () => listFn({ data: {} }) });
   const setStatus = async (id: string, status: string) => {
     try {
@@ -290,26 +291,43 @@ function OrdersAdmin() {
       toast.success("Holat o'zgartirildi"); refetch();
     } catch { toast.error("Holatni o'zgartirishda xatolik"); }
   };
+  const del = async (id: string, status: string) => {
+    if (status !== "delivered") {
+      toast.error("Faqat 'Yetkazildi' bo'lgan buyurtmani o'chirish mumkin");
+      return;
+    }
+    if (!confirm("Buyurtmani o'chirasizmi?")) return;
+    try {
+      await delFn({ data: { id } });
+      toast.success("O'chirildi"); refetch();
+    } catch (e: any) { toast.error(e.message || "Xatolik"); }
+  };
 
   return (
     <div className="space-y-3">
       {data.map((o: any) => (
         <Card key={o.id} className="p-4">
-          <div className="flex justify-between mb-2">
-            <div>
-              <p className="font-medium">{o.customer_name} · {o.customer_phone}</p>
+          <div className="flex justify-between mb-2 gap-2">
+            <div className="min-w-0">
+              <p className="font-medium truncate">{o.customer_name} · {o.customer_phone}</p>
               <p className="text-xs text-muted-foreground">#{o.id.slice(0, 8)} · {new Date(o.created_at).toLocaleString()} · {o.delivery_type === "courier" ? "Kuryer" : "O'zi"}</p>
+              {o.address && <p className="text-xs text-muted-foreground truncate">📍 {o.address}</p>}
             </div>
-            <Select value={o.status} onValueChange={(v) => setStatus(o.id, v)}>
-              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pending">Kutilmoqda</SelectItem>
-                <SelectItem value="confirmed">Tasdiqlangan</SelectItem>
-                <SelectItem value="delivering">Yetkazilmoqda</SelectItem>
-                <SelectItem value="delivered">Yetkazildi</SelectItem>
-                <SelectItem value="cancelled">Bekor</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2 shrink-0">
+              <Select value={o.status} onValueChange={(v) => setStatus(o.id, v)}>
+                <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Kutilmoqda</SelectItem>
+                  <SelectItem value="confirmed">Tasdiqlangan</SelectItem>
+                  <SelectItem value="delivering">Yetkazilmoqda</SelectItem>
+                  <SelectItem value="delivered">Yetkazildi</SelectItem>
+                  <SelectItem value="cancelled">Bekor</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button size="icon" variant="ghost" disabled={o.status !== "delivered"} title={o.status !== "delivered" ? "Faqat yetkazilgan buyurtmani o'chirish mumkin" : "O'chirish"} onClick={() => del(o.id, o.status)}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
           </div>
           <ul className="text-sm space-y-0.5">
             {o.order_items?.map((i: any) => <li key={i.id}>• {i.medicine_name} × {i.quantity} = {Number(i.line_total).toLocaleString()}</li>)}
@@ -320,6 +338,7 @@ function OrdersAdmin() {
     </div>
   );
 }
+
 
 /* ---------------- USERS ---------------- */
 function UsersAdmin() {
