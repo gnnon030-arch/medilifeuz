@@ -39,13 +39,16 @@ export const Route = createFileRoute("/admin")({
 
 function AdminPage() {
   const navigate = useNavigate();
-  const [unlocked, setUnlocked] = useState(false);
-  useEffect(() => { setUnlocked(isAdminUnlocked()); }, []);
-  if (!unlocked) {
+  const { isAdmin, loading, user } = useAuth();
+
+  if (loading) {
+    return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Yuklanmoqda...</div>;
+  }
+  if (!user || !isAdmin) {
     return (
       <div className="container mx-auto px-4 py-20 text-center space-y-4">
         <h1 className="text-2xl font-semibold">Admin panel yopiq</h1>
-        <p className="text-muted-foreground">Saytning eng pastida © 2000 MediLife yozuviga bosib parol kiriting.</p>
+        <p className="text-muted-foreground">Bu sahifa faqat administratorlar uchun.</p>
         <Button onClick={() => navigate({ to: "/" })}>Bosh sahifaga qaytish</Button>
       </div>
     );
@@ -55,7 +58,7 @@ function AdminPage() {
     <div className="container mx-auto px-4 py-10">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Admin Panel</h1>
-        <Button variant="outline" size="sm" onClick={() => { setAdminUnlocked(false); navigate({ to: "/" }); }} className="gap-2">
+        <Button variant="outline" size="sm" onClick={() => navigate({ to: "/" })} className="gap-2">
           <LogOut className="h-4 w-4" /> Chiqish
         </Button>
       </div>
