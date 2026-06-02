@@ -97,7 +97,7 @@ function ImageInput({ value, onChange }: { value: string; onChange: (v: string) 
         try {
           setBusy(true);
           const base64 = await fileToBase64(f);
-          const { url } = await uploadFn({ data: { password: ADMIN_PANEL_PASSWORD, file_name: f.name, content_type: f.type || "application/octet-stream", base64 } });
+          const { url } = await uploadFn({ data: { file_name: f.name, content_type: f.type || "application/octet-stream", base64 } });
           if (url) onChange(url);
         } catch (err: any) {
           toast.error(err.message || "Rasm yuklashda xatolik");
@@ -115,13 +115,13 @@ function NewsAdmin() {
   const listFn = useServerFn(adminListNews);
   const saveFn = useServerFn(adminSaveNews);
   const deleteFn = useServerFn(adminDeleteNews);
-  const { data = [], refetch } = useQuery({ queryKey: ["admin-news"], queryFn: () => listFn({ data: { password: ADMIN_PANEL_PASSWORD } }) });
+  const { data = [], refetch } = useQuery({ queryKey: ["admin-news"], queryFn: () => listFn({ data: {} }) });
   const [editing, setEditing] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
 
   const save = async (n: any) => {
     try {
-      await saveFn({ data: { password: ADMIN_PANEL_PASSWORD, id: n.id, title: n.title, body: n.body, image_url: n.image_url || null } });
+      await saveFn({ data: { id: n.id, title: n.title, body: n.body, image_url: n.image_url || null } });
       toast.success("Saqlandi"); setOpen(false); refetch();
     } catch { toast.error("Saqlashda xatolik. Qayta urinib ko'ring."); }
   };
@@ -147,7 +147,7 @@ function NewsAdmin() {
             <div className="flex-1 min-w-0"><h3 className="font-medium truncate">{n.title}</h3><p className="text-xs text-muted-foreground line-clamp-2">{n.body}</p></div>
             <div className="flex flex-col gap-1">
               <Button size="icon" variant="ghost" onClick={() => { setEditing(n); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await deleteFn({ data: { password: ADMIN_PANEL_PASSWORD, id: n.id } }); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await deleteFn({ data: { id: n.id } }); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
             </div>
           </Card>
         ))}
@@ -161,13 +161,13 @@ function MedicinesAdmin() {
   const listFn = useServerFn(adminListMedicines);
   const saveFn = useServerFn(adminSaveMedicine);
   const deleteFn = useServerFn(adminDeleteMedicine);
-  const { data = [], refetch } = useQuery({ queryKey: ["admin-meds"], queryFn: () => listFn({ data: { password: ADMIN_PANEL_PASSWORD } }) });
+  const { data = [], refetch } = useQuery({ queryKey: ["admin-meds"], queryFn: () => listFn({ data: {} }) });
   const [editing, setEditing] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
 
   const save = async (m: any) => {
     try {
-      await saveFn({ data: { password: ADMIN_PANEL_PASSWORD, id: m.id, name: m.name, description: m.description, image_url: m.image_url || null, price: Number(m.price) || 0, unit: m.unit, stock: parseInt(m.stock) || 0 } });
+      await saveFn({ data: { id: m.id, name: m.name, description: m.description, image_url: m.image_url || null, price: Number(m.price) || 0, unit: m.unit, stock: parseInt(m.stock) || 0 } });
       toast.success("Saqlandi"); setOpen(false); refetch();
     } catch { toast.error("Saqlashda xatolik. Qayta urinib ko'ring."); }
   };
@@ -201,7 +201,7 @@ function MedicinesAdmin() {
             </div>
             <div className="flex flex-col gap-1">
               <Button size="icon" variant="ghost" onClick={() => { setEditing(m); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await deleteFn({ data: { password: ADMIN_PANEL_PASSWORD, id: m.id } }); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await deleteFn({ data: { id: m.id } }); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
             </div>
           </Card>
         ))}
@@ -215,13 +215,13 @@ function BranchesAdmin() {
   const listFn = useServerFn(adminListBranches);
   const saveFn = useServerFn(adminSaveBranch);
   const deleteFn = useServerFn(adminDeleteBranch);
-  const { data = [], refetch } = useQuery({ queryKey: ["admin-branches"], queryFn: () => listFn({ data: { password: ADMIN_PANEL_PASSWORD } }) });
+  const { data = [], refetch } = useQuery({ queryKey: ["admin-branches"], queryFn: () => listFn({ data: {} }) });
   const [editing, setEditing] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
 
   const save = async (b: any) => {
     try {
-      await saveFn({ data: { password: ADMIN_PANEL_PASSWORD, id: b.id, name: b.name, image_url: b.image_url || null, phone: b.phone, address: b.address, map_url: b.map_url } });
+      await saveFn({ data: { id: b.id, name: b.name, image_url: b.image_url || null, phone: b.phone, address: b.address, map_url: b.map_url } });
       toast.success("Saqlandi"); setOpen(false); refetch();
     } catch { toast.error("Saqlashda xatolik. Qayta urinib ko'ring."); }
   };
@@ -252,7 +252,7 @@ function BranchesAdmin() {
             </div>
             <div className="flex flex-col gap-1">
               <Button size="icon" variant="ghost" onClick={() => { setEditing(b); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await deleteFn({ data: { password: ADMIN_PANEL_PASSWORD, id: b.id } }); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              <Button size="icon" variant="ghost" onClick={async () => { if (confirm("O'chirish?")) { await deleteFn({ data: { id: b.id } }); refetch(); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
             </div>
           </Card>
         ))}
@@ -265,10 +265,10 @@ function BranchesAdmin() {
 function OrdersAdmin() {
   const listFn = useServerFn(adminListOrders);
   const statusFn = useServerFn(adminSetOrderStatus);
-  const { data = [], refetch } = useQuery({ queryKey: ["admin-orders"], queryFn: () => listFn({ data: { password: ADMIN_PANEL_PASSWORD } }) });
+  const { data = [], refetch } = useQuery({ queryKey: ["admin-orders"], queryFn: () => listFn({ data: {} }) });
   const setStatus = async (id: string, status: string) => {
     try {
-      await statusFn({ data: { password: ADMIN_PANEL_PASSWORD, id, status: status as any } });
+      await statusFn({ data: { id, status: status as any } });
       toast.success("Holat o'zgartirildi"); refetch();
     } catch { toast.error("Holatni o'zgartirishda xatolik"); }
   };
@@ -312,7 +312,7 @@ function UsersAdmin() {
 
   const { data, refetch, isLoading } = useQuery({
     queryKey: ["admin-users"],
-    queryFn: () => listFn({ data: { password: ADMIN_PANEL_PASSWORD } }),
+    queryFn: () => listFn({ data: {} }),
   });
 
   const [editing, setEditing] = useState<any | null>(null);
@@ -323,7 +323,7 @@ function UsersAdmin() {
   const saveEdit = async () => {
     if (!editing) return;
     try {
-      await updateFn({ data: { password: ADMIN_PANEL_PASSWORD, user_id: editing.id, full_name: editing.full_name, phone: editing.phone, email: editing.email } });
+      await updateFn({ data: { user_id: editing.id, full_name: editing.full_name, phone: editing.phone, email: editing.email } });
       toast.success("Saqlandi"); setEditOpen(false); refetch();
     } catch (e: any) { toast.error(e.message); }
   };
@@ -331,7 +331,7 @@ function UsersAdmin() {
   const savePwd = async () => {
     if (!pwdUser || newPwd.length < 6) return toast.error("Parol kamida 6 ta belgi");
     try {
-      await resetFn({ data: { password: ADMIN_PANEL_PASSWORD, user_id: pwdUser.id, new_password: newPwd } });
+      await resetFn({ data: { user_id: pwdUser.id, new_password: newPwd } });
       toast.success(`Yangi parol o'rnatildi: ${newPwd}`);
       setPwdUser(null); setNewPwd("");
     } catch (e: any) { toast.error(e.message); }
@@ -340,7 +340,7 @@ function UsersAdmin() {
   const delUser = async (id: string) => {
     if (!confirm("Foydalanuvchini butunlay o'chirasizmi?")) return;
     try {
-      await deleteFn({ data: { password: ADMIN_PANEL_PASSWORD, user_id: id } });
+      await deleteFn({ data: { user_id: id } });
       toast.success("O'chirildi"); refetch();
     } catch (e: any) { toast.error(e.message); }
   };
