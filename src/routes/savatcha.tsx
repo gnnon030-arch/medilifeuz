@@ -88,17 +88,12 @@ function CartPage() {
     try {
       const res = await placeOrder({
         data: {
-          user_id: user.id,
           customer_name: name.trim(),
           customer_phone: phone,
-          delivery_type: "courier",
-          delivery_fee: courierFee,
           address: finalAddress,
           note: note || null,
           items: items.map((i) => ({
             medicine_id: i.id,
-            medicine_name: i.name,
-            unit_price: i.price,
             quantity: i.quantity,
           })),
         },
