@@ -234,7 +234,7 @@ function BranchesAdmin() {
   return (
     <div className="space-y-4">
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild><Button onClick={() => setEditing({ name: "", image_url: "", phone: "", address: "", map_url: "" })} className="gap-1"><Plus className="h-4 w-4" /> Qo'shish</Button></DialogTrigger>
+        <DialogTrigger asChild><Button onClick={() => setEditing({ name: "", image_url: "", phone: "", address: "", map_url: "", map_type: "google" })} className="gap-1"><Plus className="h-4 w-4" /> Qo'shish</Button></DialogTrigger>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Filial</DialogTitle></DialogHeader>
           {editing && <div className="space-y-3">
@@ -242,11 +242,23 @@ function BranchesAdmin() {
             <div><Label>Rasm</Label><ImageInput value={editing.image_url ?? ""} onChange={(v) => setEditing({ ...editing, image_url: v })} /></div>
             <div><Label>Telefon</Label><Input value={editing.phone ?? ""} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} /></div>
             <div><Label>Manzil</Label><Input value={editing.address ?? ""} onChange={(e) => setEditing({ ...editing, address: e.target.value })} /></div>
-            <div><Label>Google Maps URL</Label><Input value={editing.map_url ?? ""} placeholder="https://www.google.com/maps/..." onChange={(e) => setEditing({ ...editing, map_url: e.target.value })} /></div>
-            <Button onClick={() => save(editing)} className="w-full">Saqlash</Button>
+            <div>
+              <Label>Karta turi</Label>
+              <Select value={editing.map_type ?? "google"} onValueChange={(v) => setEditing({ ...editing, map_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="text">Matn (faqat manzil)</SelectItem>
+                  <SelectItem value="google">Google Maps</SelectItem>
+                  <SelectItem value="yandex">Yandex Maps</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Karta URL (ixtiyoriy — "Xaritada ko'rish" tugmasi uchun)</Label><Input value={editing.map_url ?? ""} placeholder="https://maps.google.com/... yoki https://yandex.uz/maps/..." onChange={(e) => setEditing({ ...editing, map_url: e.target.value })} /></div>
+            <Button onClick={() => save({ ...editing, map_type: editing.map_type ?? "google" })} className="w-full">Saqlash</Button>
           </div>}
         </DialogContent>
       </Dialog>
+
       <div className="grid md:grid-cols-2 gap-3">
         {data.map((b: any) => (
           <Card key={b.id} className="p-3 flex gap-3">
