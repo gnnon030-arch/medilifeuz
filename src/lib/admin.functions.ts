@@ -129,7 +129,9 @@ const BranchSchema = z.object({
   phone: z.string().max(40).nullable().optional(),
   address: z.string().max(500).nullable().optional(),
   map_url: z.string().max(1500).nullable().optional(),
+  map_type: z.enum(["text", "google", "yandex"]).optional(),
 });
+
 
 export const adminListBranches = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
