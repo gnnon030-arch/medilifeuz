@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { formatPhone, isValidPhone } from "@/lib/phone";
 import { placeOrder } from "@/lib/orders.functions";
 import { YandexAddressPicker } from "@/components/YandexAddressPicker";
+import { GoogleAddressPicker } from "@/components/GoogleAddressPicker";
 
 export const Route = createFileRoute("/savatcha")({
   component: CartPage,
@@ -23,16 +24,14 @@ export const Route = createFileRoute("/savatcha")({
 function formatNamanganTime(d: Date): string {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Asia/Tashkent",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit", hour12: false,
   }).formatToParts(d);
   const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
   return `${get("day")}.${get("month")}.${get("year")} ${get("hour")}:${get("minute")}`;
 }
+
+type AddrMethod = "text" | "google" | "yandex";
 
 function CartPage() {
   const { t } = useTranslation();
@@ -50,8 +49,10 @@ function CartPage() {
   const [tab, setTab] = useState<"cart" | "checkout">("cart");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("+998 ");
+  const [addrMethod, setAddrMethod] = useState<AddrMethod>("text");
   const [addressText, setAddressText] = useState("");
-  const [addressMap, setAddressMap] = useState("");
+  const [addressGoogle, setAddressGoogle] = useState("");
+  const [addressYandex, setAddressYandex] = useState("");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -64,14 +65,10 @@ function CartPage() {
     if (items.length === 0 && tab === "checkout") setTab("cart");
   }, [items.length, tab]);
 
-  const courierFee = 0;
-  const grand = total + courierFee;
+  const grand = total;
   const isEmpty = items.length === 0;
 
-  const goCheckout = () => {
-    if (isEmpty) return;
-    setTab("checkout");
-  };
+  const goCheckout = () => { if (!isEmpty) setTab("checkout"); };
 
   const submit = async () => {
     if (!user) {
@@ -81,8 +78,20 @@ function CartPage() {
     }
     if (!name.trim()) return toast.error("Ismni kiriting");
     if (!isValidPhone(phone)) return toast.error(t("auth.phone_invalid"));
-    const finalAddress = [addressText.trim(), addressMap.trim()].filter(Boolean).join(" | ");
-    if (!finalAddress) return toast.error(t("cart.address_text"));
+
+    let finalAddress = "";
+    if (addrMethod === "text") {
+      const nonSpace = addressText.replace(/\s+/g, "");
+      if (nonSpace.length < 20) return toast.error(t("cart.address_min"));
+      finalAddress = addressText.trim();
+    } else if (addrMethod === "google") {
+      if (!addressGoogle.trim()) return toast.error(t("cart.address_text"));
+      finalAddress = addressGoogle.trim();
+    } else {
+      if (!addressYandex.trim()) return toast.error(t("cart.address_text"));
+      finalAddress = addressYandex.trim();
+    }
+
     if (isEmpty) return;
     setSubmitting(true);
     try {
@@ -92,10 +101,7 @@ function CartPage() {
           customer_phone: phone,
           address: finalAddress,
           note: note || null,
-          items: items.map((i) => ({
-            medicine_id: i.id,
-            quantity: i.quantity,
-          })),
+          items: items.map((i) => ({ medicine_id: i.id, quantity: i.quantity })),
         },
       });
       toast.success(`${t("cart.submitted")} #${res.orderId.slice(0, 8)}`);
@@ -107,6 +113,8 @@ function CartPage() {
       setSubmitting(false);
     }
   };
+
+  const textNonSpaceLen = addressText.replace(/\s+/g, "").length;
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-4xl">
@@ -133,12 +141,8 @@ function CartPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium truncate">{i.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {i.quantity} {i.unit} · {i.price.toLocaleString()} {t("common.sum")}
-                    </p>
-                    <p className="text-sm font-semibold text-primary">
-                      = {(i.price * i.quantity).toLocaleString()} {t("common.sum")}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{i.quantity} {i.unit} · {i.price.toLocaleString()} {t("common.sum")}</p>
+                    <p className="text-sm font-semibold text-primary">= {(i.price * i.quantity).toLocaleString()} {t("common.sum")}</p>
                   </div>
                   <div className="flex items-center gap-1">
                     <Button size="icon" variant="outline" onClick={() => remove(i.id)}><Minus className="h-4 w-4" /></Button>
@@ -158,20 +162,15 @@ function CartPage() {
                   <span>{t("cart.subtotal")}:</span>
                   <span>{total.toLocaleString()} {t("common.sum")}</span>
                 </div>
-
                 <div className="border-t pt-3 text-sm">
                   <div className="font-medium">🚚 {t("cart.delivery_only")}</div>
                   <div className="text-primary font-semibold mt-1">{t("cart.delivery_free_city")}</div>
                 </div>
-
                 <div className="flex justify-between text-lg font-bold pt-3 border-t">
                   <span>{t("cart.total")}:</span>
                   <span>{grand.toLocaleString()} {t("common.sum")}</span>
                 </div>
-
-                <Button onClick={goCheckout} disabled={isEmpty} size="lg" className="w-full">
-                  {t("cart.submit")}
-                </Button>
+                <Button onClick={goCheckout} disabled={isEmpty} size="lg" className="w-full">{t("cart.submit")}</Button>
               </Card>
             </>
           )}
@@ -190,18 +189,39 @@ function CartPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{t("cart.address_text")}</Label>
-                <Input value={addressText} onChange={(e) => setAddressText(e.target.value.slice(0, 300))} placeholder={t("cart.address_text_ph")} />
-              </div>
+                <Label>{t("cart.address_method")}</Label>
+                <Tabs value={addrMethod} onValueChange={(v) => setAddrMethod(v as AddrMethod)}>
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="text">{t("cart.address_method_text")}</TabsTrigger>
+                    <TabsTrigger value="google">{t("cart.address_method_google")}</TabsTrigger>
+                    <TabsTrigger value="yandex">{t("cart.address_method_yandex")}</TabsTrigger>
+                  </TabsList>
 
-              <div className="space-y-2">
-                <Label>{t("cart.address_map")}</Label>
-                <YandexAddressPicker onPick={(addr) => setAddressMap(addr)} />
-                {addressMap && (
-                  <p className="text-sm">
-                    <span className="text-muted-foreground">{t("cart.address_picked")}:</span> <span className="font-medium">{addressMap}</span>
-                  </p>
-                )}
+                  <TabsContent value="text" className="space-y-2 mt-3">
+                    <Input
+                      value={addressText}
+                      onChange={(e) => setAddressText(e.target.value.slice(0, 400))}
+                      placeholder={t("cart.address_text_ph")}
+                    />
+                    <p className={`text-xs ${textNonSpaceLen < 20 ? "text-destructive" : "text-muted-foreground"}`}>
+                      {textNonSpaceLen}/20 {textNonSpaceLen < 20 ? `— ${t("cart.address_min")}` : "✓"}
+                    </p>
+                  </TabsContent>
+
+                  <TabsContent value="google" className="space-y-2 mt-3">
+                    <GoogleAddressPicker onPick={(a) => setAddressGoogle(a)} />
+                    {addressGoogle && (
+                      <p className="text-sm"><span className="text-muted-foreground">{t("cart.address_picked")}:</span> <span className="font-medium">{addressGoogle}</span></p>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="yandex" className="space-y-2 mt-3">
+                    <YandexAddressPicker onPick={(a) => setAddressYandex(a)} />
+                    {addressYandex && (
+                      <p className="text-sm"><span className="text-muted-foreground">{t("cart.address_picked")}:</span> <span className="font-medium">{addressYandex}</span></p>
+                    )}
+                  </TabsContent>
+                </Tabs>
               </div>
 
               <div className="space-y-2">
@@ -222,18 +242,9 @@ function CartPage() {
               </div>
 
               <div className="border-t pt-4 space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span>{t("cart.subtotal")}</span>
-                  <span>{total.toLocaleString()} {t("common.sum")}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>{t("cart.delivery_fee")}</span>
-                  <span className="text-primary font-semibold">{t("cart.delivery_free_city")}</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                  <span>{t("cart.total")}</span>
-                  <span>{grand.toLocaleString()} {t("common.sum")}</span>
-                </div>
+                <div className="flex justify-between text-sm"><span>{t("cart.subtotal")}</span><span>{total.toLocaleString()} {t("common.sum")}</span></div>
+                <div className="flex justify-between text-sm"><span>{t("cart.delivery_fee")}</span><span className="text-primary font-semibold">{t("cart.delivery_free_city")}</span></div>
+                <div className="flex justify-between text-lg font-bold pt-2 border-t"><span>{t("cart.total")}</span><span>{grand.toLocaleString()} {t("common.sum")}</span></div>
               </div>
 
               <Button onClick={submit} disabled={submitting} size="lg" className="w-full">

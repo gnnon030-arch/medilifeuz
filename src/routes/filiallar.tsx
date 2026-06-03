@@ -5,7 +5,6 @@ import { Phone, MapPin, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { GOOGLE_MAPS_API_KEY } from "@/lib/admin";
 
 export const Route = createFileRoute("/filiallar")({
   component: BranchesPage,
@@ -26,18 +25,13 @@ function BranchesPage() {
     <div className="container mx-auto px-4 py-10">
       <h1 className="text-4xl font-bold mb-8">{t("branches.title")}</h1>
       {data.length === 0 ? (
-        <p className="text-muted-foreground">Hozircha filiallar qo'shilmagan.</p>
+        <p className="text-muted-foreground text-center py-12">{t("branches.empty")}</p>
       ) : (
         <div className="grid md:grid-cols-2 gap-6">
           {data.map((b: any) => {
             const q = encodeURIComponent(b.address || b.name || "Namangan");
-            const mapType = b.map_type || "google";
-            let embedSrc: string | null = null;
-            if (mapType === "google") {
-              embedSrc = `https://www.google.com/maps?q=${q}&output=embed`;
-            } else if (mapType === "yandex") {
-              embedSrc = `https://yandex.uz/map-widget/v1/?text=${q}&z=15&l=map`;
-            }
+            const googleEmbed = b.google_map_url ? `https://www.google.com/maps?q=${q}&output=embed` : null;
+            const yandexEmbed = b.yandex_map_url ? `https://yandex.uz/map-widget/v1/?text=${q}&z=15&l=map` : null;
             return (
               <Card key={b.id} className="overflow-hidden">
                 {b.image_url && (
@@ -52,21 +46,39 @@ function BranchesPage() {
                   <h3 className="text-xl font-semibold">{b.name}</h3>
                   {b.address && <p className="text-sm flex items-start gap-2"><MapPin className="h-4 w-4 mt-0.5 text-primary shrink-0" />{b.address}</p>}
                   {b.phone && <p className="text-sm flex items-center gap-2"><Phone className="h-4 w-4 text-primary" /><a href={`tel:${b.phone}`}>{b.phone}</a></p>}
-                  {embedSrc && (
-                    <div className="aspect-video rounded-md overflow-hidden border">
-                      <iframe
-                        src={embedSrc}
-                        width="100%" height="100%" style={{ border: 0 }} loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade" title={b.name}
-                        allowFullScreen
-                      />
+
+                  {(googleEmbed || yandexEmbed) && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {googleEmbed && (
+                        <div className="aspect-video rounded-md overflow-hidden border">
+                          <iframe src={googleEmbed} width="100%" height="100%" style={{ border: 0 }} loading="lazy" referrerPolicy="no-referrer-when-downgrade" title={`${b.name} — Google`} />
+                        </div>
+                      )}
+                      {yandexEmbed && (
+                        <div className="aspect-video rounded-md overflow-hidden border">
+                          <iframe src={yandexEmbed} width="100%" height="100%" style={{ border: 0 }} loading="lazy" referrerPolicy="no-referrer-when-downgrade" title={`${b.name} — Yandex`} />
+                        </div>
+                      )}
                     </div>
                   )}
-                  {b.map_url && (
-                    <a href={b.map_url} target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline" size="sm" className="gap-2"><ExternalLink className="h-4 w-4" /> {t("branches.view_map")}</Button>
-                    </a>
-                  )}
+
+                  <div className="flex flex-wrap gap-2">
+                    {b.google_map_url && (
+                      <a href={b.google_map_url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="sm" className="gap-2"><ExternalLink className="h-4 w-4" /> {t("branches.view_google")}</Button>
+                      </a>
+                    )}
+                    {b.yandex_map_url && (
+                      <a href={b.yandex_map_url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="sm" className="gap-2"><ExternalLink className="h-4 w-4" /> {t("branches.view_yandex")}</Button>
+                      </a>
+                    )}
+                    {!b.google_map_url && !b.yandex_map_url && b.map_url && (
+                      <a href={b.map_url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="sm" className="gap-2"><ExternalLink className="h-4 w-4" /> {t("branches.view_map")}</Button>
+                      </a>
+                    )}
+                  </div>
                 </div>
               </Card>
             );
@@ -76,5 +88,3 @@ function BranchesPage() {
     </div>
   );
 }
-// GOOGLE_MAPS_API_KEY kept imported in case of future embed-v1 usage
-void GOOGLE_MAPS_API_KEY;

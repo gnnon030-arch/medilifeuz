@@ -44,7 +44,7 @@ export function YandexAddressPicker({ onPick }: { onPick: (address: string) => v
   const placemark = useRef<any>(null);
   const ymapsRef = useRef<any>(null);
 
-  const setMarker = async (coords: number[]) => {
+  const setMarker = async (coords: number[], autoConfirm = false) => {
     const ymaps = ymapsRef.current;
     if (!ymaps || !mapInstance.current) return;
     const res = await ymaps.geocode(coords);
@@ -67,12 +67,16 @@ export function YandexAddressPicker({ onPick }: { onPick: (address: string) => v
       placemark.current.properties.set("iconCaption", addr);
     }
     mapInstance.current.setCenter(coords);
+    if (autoConfirm) {
+      onPick(addr);
+      setOpen(false);
+    }
   };
 
   const useMyLocation = () => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => setMarker([pos.coords.latitude, pos.coords.longitude]),
+      (pos) => setMarker([pos.coords.latitude, pos.coords.longitude], true),
       () => {},
       { enableHighAccuracy: true, timeout: 10_000 }
     );

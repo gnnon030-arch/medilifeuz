@@ -52,6 +52,14 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-1">
+          {user && (
+            <Link to="/buyurtmalarim" className="hidden md:inline-flex">
+              <Button variant="ghost" size="sm">{t("nav.orders")}</Button>
+            </Link>
+          )}
+          <Link to="/filiallar" className="hidden md:inline-flex">
+            <Button variant="ghost" size="sm">{t("nav.branches")}</Button>
+          </Link>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="font-semibold uppercase">
