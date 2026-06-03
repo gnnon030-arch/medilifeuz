@@ -18,32 +18,38 @@ export type Database = {
         Row: {
           address: string | null
           created_at: string
+          google_map_url: string | null
           id: string
           image_url: string | null
           map_type: string
           map_url: string | null
           name: string
           phone: string | null
+          yandex_map_url: string | null
         }
         Insert: {
           address?: string | null
           created_at?: string
+          google_map_url?: string | null
           id?: string
           image_url?: string | null
           map_type?: string
           map_url?: string | null
           name: string
           phone?: string | null
+          yandex_map_url?: string | null
         }
         Update: {
           address?: string | null
           created_at?: string
+          google_map_url?: string | null
           id?: string
           image_url?: string | null
           map_type?: string
           map_url?: string | null
           name?: string
           phone?: string | null
+          yandex_map_url?: string | null
         }
         Relationships: []
       }
