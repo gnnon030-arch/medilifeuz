@@ -56,6 +56,7 @@ export function YandexAddressPicker({ onPick }: { onPick: (address: string, mapU
       if (got) addr = got;
     } catch {}
     setPicked(addr);
+    setCoords(coords);
     if (!placemark.current) {
       placemark.current = new ymaps.Placemark(
         coords,
