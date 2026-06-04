@@ -104,7 +104,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         `Mahsulotlar: ${subtotal.toLocaleString()} so'm`,
         `Yetkazib berish: ${delivery_fee.toLocaleString()} so'm`,
         `<b>Jami: ${total.toLocaleString()} so'm</b>`,
-      ];
+      );
       if (data.note) lines.push("", `📝 ${data.note}`);
       lines.push("", `🆔 Order: ${order.id}`);
 
