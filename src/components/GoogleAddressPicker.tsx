@@ -40,6 +40,7 @@ export function GoogleAddressPicker({ onPick }: { onPick: (address: string, mapU
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [picked, setPicked] = useState("");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const mapDiv = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
