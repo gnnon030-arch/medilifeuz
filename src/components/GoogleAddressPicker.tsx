@@ -35,11 +35,12 @@ function loadGmaps(): Promise<any> {
   });
 }
 
-export function GoogleAddressPicker({ onPick }: { onPick: (address: string) => void }) {
+export function GoogleAddressPicker({ onPick }: { onPick: (address: string, mapUrl?: string) => void }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [picked, setPicked] = useState("");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const mapDiv = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
@@ -56,6 +57,7 @@ export function GoogleAddressPicker({ onPick }: { onPick: (address: string) => v
       markerRef.current.setPosition(pos);
     }
     mapRef.current.panTo(pos);
+    setCoords({ lat, lng });
     setPicked(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
     try {
       geocoderRef.current?.geocode({ location: pos }, (res: any[], status: string) => {
@@ -91,7 +93,13 @@ export function GoogleAddressPicker({ onPick }: { onPick: (address: string) => v
     return () => { cancelled = true; markerRef.current = null; mapRef.current = null; };
   }, [open]);
 
-  const confirm = () => { if (picked) onPick(picked); setOpen(false); };
+  const confirm = () => {
+    if (picked) {
+      const url = coords ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}` : undefined;
+      onPick(picked, url);
+    }
+    setOpen(false);
+  };
 
   return (
     <>

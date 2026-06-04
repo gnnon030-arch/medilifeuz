@@ -12,6 +12,7 @@ const PlaceOrderSchema = z.object({
   customer_name: z.string().trim().min(1).max(100),
   customer_phone: z.string().trim().min(7).max(20),
   address: z.string().trim().min(1).max(600),
+  map_url: z.string().url().max(500).optional().nullable(),
   note: z.string().max(500).optional().nullable(),
   items: z.array(OrderItemSchema).min(1).max(50),
 });
@@ -93,6 +94,9 @@ export const placeOrder = createServerFn({ method: "POST" })
         `📞 ${data.customer_phone}`,
         `🚚 Yetkazib berish (shahar bo'ylab bepul)`,
         `📍 ${data.address}`,
+      ];
+      if (data.map_url) lines.push(`🗺 <a href="${data.map_url}">Xaritada ko'rish</a>`);
+      lines.push(
         "",
         "<b>Dorilar:</b>",
         ...resolved.map((i) => `• ${i.medicine_name} × ${i.quantity} = ${(i.unit_price * i.quantity).toLocaleString()} so'm`),
@@ -100,7 +104,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         `Mahsulotlar: ${subtotal.toLocaleString()} so'm`,
         `Yetkazib berish: ${delivery_fee.toLocaleString()} so'm`,
         `<b>Jami: ${total.toLocaleString()} so'm</b>`,
-      ];
+      );
       if (data.note) lines.push("", `📝 ${data.note}`);
       lines.push("", `🆔 Order: ${order.id}`);
 

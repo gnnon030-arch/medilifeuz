@@ -34,11 +34,12 @@ function loadYmaps(): Promise<any> {
   });
 }
 
-export function YandexAddressPicker({ onPick }: { onPick: (address: string) => void }) {
+export function YandexAddressPicker({ onPick }: { onPick: (address: string, mapUrl?: string) => void }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [picked, setPicked] = useState<string>("");
+  const [coords, setCoords] = useState<number[] | null>(null);
   const mapDiv = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const placemark = useRef<any>(null);
@@ -55,6 +56,7 @@ export function YandexAddressPicker({ onPick }: { onPick: (address: string) => v
       if (got) addr = got;
     } catch {}
     setPicked(addr);
+    setCoords(coords);
     if (!placemark.current) {
       placemark.current = new ymaps.Placemark(
         coords,
@@ -113,7 +115,10 @@ export function YandexAddressPicker({ onPick }: { onPick: (address: string) => v
   }, [open]);
 
   const confirm = () => {
-    if (picked) onPick(picked);
+    if (picked) {
+      const url = coords ? `https://yandex.com/maps/?ll=${coords[1]},${coords[0]}&z=17&pt=${coords[1]},${coords[0]}` : undefined;
+      onPick(picked, url);
+    }
     setOpen(false);
   };
 

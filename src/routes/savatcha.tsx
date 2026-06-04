@@ -52,7 +52,9 @@ function CartPage() {
   const [addrMethod, setAddrMethod] = useState<AddrMethod>("text");
   const [addressText, setAddressText] = useState("");
   const [addressGoogle, setAddressGoogle] = useState("");
+  const [addressGoogleUrl, setAddressGoogleUrl] = useState<string | undefined>();
   const [addressYandex, setAddressYandex] = useState("");
+  const [addressYandexUrl, setAddressYandexUrl] = useState<string | undefined>();
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -80,6 +82,7 @@ function CartPage() {
     if (!isValidPhone(phone)) return toast.error(t("auth.phone_invalid"));
 
     let finalAddress = "";
+    let mapUrl: string | undefined;
     if (addrMethod === "text") {
       const nonSpace = addressText.replace(/\s+/g, "");
       if (nonSpace.length < 20) return toast.error(t("cart.address_min"));
@@ -87,9 +90,11 @@ function CartPage() {
     } else if (addrMethod === "google") {
       if (!addressGoogle.trim()) return toast.error(t("cart.address_text"));
       finalAddress = addressGoogle.trim();
+      mapUrl = addressGoogleUrl;
     } else {
       if (!addressYandex.trim()) return toast.error(t("cart.address_text"));
       finalAddress = addressYandex.trim();
+      mapUrl = addressYandexUrl;
     }
 
     if (isEmpty) return;
@@ -100,6 +105,7 @@ function CartPage() {
           customer_name: name.trim(),
           customer_phone: phone,
           address: finalAddress,
+          map_url: mapUrl ?? null,
           note: note || null,
           items: items.map((i) => ({ medicine_id: i.id, quantity: i.quantity })),
         },
@@ -209,14 +215,14 @@ function CartPage() {
                   </TabsContent>
 
                   <TabsContent value="google" className="space-y-2 mt-3">
-                    <GoogleAddressPicker onPick={(a) => setAddressGoogle(a)} />
+                    <GoogleAddressPicker onPick={(a, url) => { setAddressGoogle(a); setAddressGoogleUrl(url); }} />
                     {addressGoogle && (
                       <p className="text-sm"><span className="text-muted-foreground">{t("cart.address_picked")}:</span> <span className="font-medium">{addressGoogle}</span></p>
                     )}
                   </TabsContent>
 
                   <TabsContent value="yandex" className="space-y-2 mt-3">
-                    <YandexAddressPicker onPick={(a) => setAddressYandex(a)} />
+                    <YandexAddressPicker onPick={(a, url) => { setAddressYandex(a); setAddressYandexUrl(url); }} />
                     {addressYandex && (
                       <p className="text-sm"><span className="text-muted-foreground">{t("cart.address_picked")}:</span> <span className="font-medium">{addressYandex}</span></p>
                     )}
