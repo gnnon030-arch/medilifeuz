@@ -82,6 +82,7 @@ function CartPage() {
     if (!isValidPhone(phone)) return toast.error(t("auth.phone_invalid"));
 
     let finalAddress = "";
+    let mapUrl: string | undefined;
     if (addrMethod === "text") {
       const nonSpace = addressText.replace(/\s+/g, "");
       if (nonSpace.length < 20) return toast.error(t("cart.address_min"));
@@ -89,9 +90,11 @@ function CartPage() {
     } else if (addrMethod === "google") {
       if (!addressGoogle.trim()) return toast.error(t("cart.address_text"));
       finalAddress = addressGoogle.trim();
+      mapUrl = addressGoogleUrl;
     } else {
       if (!addressYandex.trim()) return toast.error(t("cart.address_text"));
       finalAddress = addressYandex.trim();
+      mapUrl = addressYandexUrl;
     }
 
     if (isEmpty) return;
@@ -102,6 +105,7 @@ function CartPage() {
           customer_name: name.trim(),
           customer_phone: phone,
           address: finalAddress,
+          map_url: mapUrl ?? null,
           note: note || null,
           items: items.map((i) => ({ medicine_id: i.id, quantity: i.quantity })),
         },
