@@ -44,12 +44,16 @@ export function YandexAddressPicker({ onPick }: { onPick: (address: string) => v
   const placemark = useRef<any>(null);
   const ymapsRef = useRef<any>(null);
 
-  const setMarker = async (coords: number[], autoConfirm = false) => {
+  const setMarker = async (coords: number[]) => {
     const ymaps = ymapsRef.current;
     if (!ymaps || !mapInstance.current) return;
-    const res = await ymaps.geocode(coords);
-    const first = res.geoObjects.get(0);
-    const addr = first?.getAddressLine?.() ?? `${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}`;
+    let addr = `${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}`;
+    try {
+      const res = await ymaps.geocode(coords);
+      const first = res.geoObjects.get(0);
+      const got = first?.getAddressLine?.();
+      if (got) addr = got;
+    } catch {}
     setPicked(addr);
     if (!placemark.current) {
       placemark.current = new ymaps.Placemark(
@@ -66,21 +70,18 @@ export function YandexAddressPicker({ onPick }: { onPick: (address: string) => v
       placemark.current.geometry.setCoordinates(coords);
       placemark.current.properties.set("iconCaption", addr);
     }
-    mapInstance.current.setCenter(coords);
-    if (autoConfirm) {
-      onPick(addr);
-      setOpen(false);
-    }
+    mapInstance.current.setCenter(coords, 16);
   };
 
   const useMyLocation = () => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => setMarker([pos.coords.latitude, pos.coords.longitude], true),
+      (pos) => setMarker([pos.coords.latitude, pos.coords.longitude]),
       () => {},
       { enableHighAccuracy: true, timeout: 10_000 }
     );
   };
+
 
   useEffect(() => {
     if (!open) return;
