@@ -35,7 +35,7 @@ function loadGmaps(): Promise<any> {
   });
 }
 
-export function GoogleAddressPicker({ onPick }: { onPick: (address: string) => void }) {
+export function GoogleAddressPicker({ onPick }: { onPick: (address: string, mapUrl?: string) => void }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
