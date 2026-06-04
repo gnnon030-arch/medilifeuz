@@ -45,7 +45,7 @@ export function GoogleAddressPicker({ onPick }: { onPick: (address: string) => v
   const markerRef = useRef<any>(null);
   const geocoderRef = useRef<any>(null);
 
-  const setMarker = (lat: number, lng: number, autoConfirm = false) => {
+  const setMarker = (lat: number, lng: number) => {
     const g = window.google;
     if (!g || !mapRef.current) return;
     const pos = { lat, lng };
@@ -56,21 +56,23 @@ export function GoogleAddressPicker({ onPick }: { onPick: (address: string) => v
       markerRef.current.setPosition(pos);
     }
     mapRef.current.panTo(pos);
-    geocoderRef.current?.geocode({ location: pos }, (res: any[], status: string) => {
-      const addr = status === "OK" && res[0]?.formatted_address ? res[0].formatted_address : `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-      setPicked(addr);
-      if (autoConfirm) { onPick(addr); setOpen(false); }
-    });
+    setPicked(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+    try {
+      geocoderRef.current?.geocode({ location: pos }, (res: any[], status: string) => {
+        if (status === "OK" && res[0]?.formatted_address) setPicked(res[0].formatted_address);
+      });
+    } catch {}
   };
 
   const useMyLocation = () => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => setMarker(pos.coords.latitude, pos.coords.longitude, true),
+      (pos) => setMarker(pos.coords.latitude, pos.coords.longitude),
       () => {},
       { enableHighAccuracy: true, timeout: 10_000 }
     );
   };
+
 
   useEffect(() => {
     if (!open) return;

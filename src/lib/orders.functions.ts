@@ -131,12 +131,14 @@ export const deleteMyOrder = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!o) throw new Error("Buyurtma topilmadi");
-    if (o.user_id !== context.userId) throw new Error("Ruxsat yo'q");
+    // Allow if order belongs to user, or order has no owner yet (legacy orders)
+    if (o.user_id && o.user_id !== context.userId) throw new Error("Ruxsat yo'q");
     if (o.status !== "delivered") throw new Error("Faqat yetkazilgan buyurtmani o'chirish mumkin");
-    await supabaseAdmin.from("order_items").delete().eq("order_id", data.id);
     await supabaseAdmin.from("reviews").delete().eq("order_id", data.id);
+    await supabaseAdmin.from("order_items").delete().eq("order_id", data.id);
     const { error: derr } = await supabaseAdmin.from("orders").delete().eq("id", data.id);
     if (derr) throw new Error(derr.message);
     return { ok: true };
   });
+
 
