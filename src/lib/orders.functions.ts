@@ -12,6 +12,7 @@ const PlaceOrderSchema = z.object({
   customer_name: z.string().trim().min(1).max(100),
   customer_phone: z.string().trim().min(7).max(20),
   address: z.string().trim().min(1).max(600),
+  map_url: z.string().url().max(500).optional().nullable(),
   note: z.string().max(500).optional().nullable(),
   items: z.array(OrderItemSchema).min(1).max(50),
 });
