@@ -222,7 +222,7 @@ function CartPage() {
                   </TabsContent>
 
                   <TabsContent value="yandex" className="space-y-2 mt-3">
-                    <YandexAddressPicker onPick={(a) => setAddressYandex(a)} />
+                    <YandexAddressPicker onPick={(a, url) => { setAddressYandex(a); setAddressYandexUrl(url); }} />
                     {addressYandex && (
                       <p className="text-sm"><span className="text-muted-foreground">{t("cart.address_picked")}:</span> <span className="font-medium">{addressYandex}</span></p>
                     )}
