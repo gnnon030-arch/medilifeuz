@@ -94,6 +94,9 @@ export const placeOrder = createServerFn({ method: "POST" })
         `📞 ${data.customer_phone}`,
         `🚚 Yetkazib berish (shahar bo'ylab bepul)`,
         `📍 ${data.address}`,
+      ];
+      if (data.map_url) lines.push(`🗺 <a href="${data.map_url}">Xaritada ko'rish</a>`);
+      lines.push(
         "",
         "<b>Dorilar:</b>",
         ...resolved.map((i) => `• ${i.medicine_name} × ${i.quantity} = ${(i.unit_price * i.quantity).toLocaleString()} so'm`),
