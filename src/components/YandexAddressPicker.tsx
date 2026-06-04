@@ -115,7 +115,10 @@ export function YandexAddressPicker({ onPick }: { onPick: (address: string, mapU
   }, [open]);
 
   const confirm = () => {
-    if (picked) onPick(picked);
+    if (picked) {
+      const url = coords ? `https://yandex.com/maps/?ll=${coords[1]},${coords[0]}&z=17&pt=${coords[1]},${coords[0]}` : undefined;
+      onPick(picked, url);
+    }
     setOpen(false);
   };
 
