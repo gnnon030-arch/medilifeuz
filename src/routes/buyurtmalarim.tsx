@@ -60,6 +60,7 @@ function statusVariant(s: string) {
 
 function OrderRow({ order, onChanged }: { order: any; onChanged: () => void }) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [rating, setRating] = useState(8);
   const [comment, setComment] = useState("");
   const [open, setOpen] = useState(false);
@@ -69,14 +70,16 @@ function OrderRow({ order, onChanged }: { order: any; onChanged: () => void }) {
   const existingReview = order.reviews?.[0];
 
   const submit = async () => {
+    if (!user) return toast.error("Avval tizimga kiring");
     setSaving(true);
-    const { error } = await supabase.from("reviews").insert({ order_id: order.id, user_id: order.user_id, rating, comment });
+    const { error } = await supabase.from("reviews").insert({ order_id: order.id, user_id: user.id, rating, comment });
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Sharh saqlandi");
     setOpen(false);
     onChanged();
   };
+
 
   const del = async () => {
     if (!confirm(t("cart.delete_order") + "?")) return;
