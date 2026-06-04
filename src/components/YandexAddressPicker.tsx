@@ -34,11 +34,12 @@ function loadYmaps(): Promise<any> {
   });
 }
 
-export function YandexAddressPicker({ onPick }: { onPick: (address: string) => void }) {
+export function YandexAddressPicker({ onPick }: { onPick: (address: string, mapUrl?: string) => void }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [picked, setPicked] = useState<string>("");
+  const [coords, setCoords] = useState<number[] | null>(null);
   const mapDiv = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const placemark = useRef<any>(null);
