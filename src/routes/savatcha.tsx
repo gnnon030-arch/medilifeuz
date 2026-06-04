@@ -215,7 +215,7 @@ function CartPage() {
                   </TabsContent>
 
                   <TabsContent value="google" className="space-y-2 mt-3">
-                    <GoogleAddressPicker onPick={(a) => setAddressGoogle(a)} />
+                    <GoogleAddressPicker onPick={(a, url) => { setAddressGoogle(a); setAddressGoogleUrl(url); }} />
                     {addressGoogle && (
                       <p className="text-sm"><span className="text-muted-foreground">{t("cart.address_picked")}:</span> <span className="font-medium">{addressGoogle}</span></p>
                     )}
