@@ -57,6 +57,7 @@ export function GoogleAddressPicker({ onPick }: { onPick: (address: string, mapU
       markerRef.current.setPosition(pos);
     }
     mapRef.current.panTo(pos);
+    setCoords({ lat, lng });
     setPicked(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
     try {
       geocoderRef.current?.geocode({ location: pos }, (res: any[], status: string) => {
