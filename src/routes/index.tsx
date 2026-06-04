@@ -24,7 +24,7 @@ function NewsCarousel({ items }: { items: News[] }) {
   const [idx, setIdx] = useState(0);
   useEffect(() => {
     if (items.length < 2) return;
-    const id = setInterval(() => setIdx((i) => (i + 1) % items.length), 2000);
+    const id = setInterval(() => setIdx((i) => (i + 1) % items.length), 5000);
     return () => clearInterval(id);
   }, [items.length]);
 
