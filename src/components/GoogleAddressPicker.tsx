@@ -93,7 +93,13 @@ export function GoogleAddressPicker({ onPick }: { onPick: (address: string, mapU
     return () => { cancelled = true; markerRef.current = null; mapRef.current = null; };
   }, [open]);
 
-  const confirm = () => { if (picked) onPick(picked); setOpen(false); };
+  const confirm = () => {
+    if (picked) {
+      const url = coords ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}` : undefined;
+      onPick(picked, url);
+    }
+    setOpen(false);
+  };
 
   return (
     <>
