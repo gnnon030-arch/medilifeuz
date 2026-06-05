@@ -13,7 +13,7 @@ export const Route = createFileRoute("/filiallar")({
 
 function BranchesPage() {
   const { t } = useTranslation();
-  const { data = [] } = useQuery({
+  const { data = [], isLoading } = useQuery({
     queryKey: ["branches-all"],
     queryFn: async () => {
       const { data } = await supabase.from("branches").select("*").order("created_at", { ascending: false });
@@ -24,7 +24,9 @@ function BranchesPage() {
   return (
     <div className="container mx-auto px-4 py-10">
       <h1 className="text-4xl font-bold mb-8">{t("branches.title")}</h1>
-      {data.length === 0 ? (
+      {isLoading ? (
+        <p className="text-muted-foreground text-center py-12">{t("common.loading")}</p>
+      ) : data.length === 0 ? (
         <p className="text-muted-foreground text-center py-12">{t("branches.empty")}</p>
       ) : (
         <div className="grid md:grid-cols-2 gap-6">
