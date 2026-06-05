@@ -31,7 +31,9 @@ function MedicinesPage() {
         <h1 className="text-4xl font-bold">{t("medicines.title")}</h1>
         <Input placeholder={t("common.search")} value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs" />
       </div>
-      {filtered.length === 0 ? (
+      {isLoading ? (
+        <p className="text-muted-foreground">{t("common.loading")}</p>
+      ) : filtered.length === 0 ? (
         <p className="text-muted-foreground">{t("medicines.empty")}</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
