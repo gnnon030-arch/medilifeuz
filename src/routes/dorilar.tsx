@@ -15,7 +15,7 @@ function MedicinesPage() {
   const { t } = useTranslation();
   const [q, setQ] = useState("");
 
-  const { data = [] } = useQuery({
+  const { data = [], isLoading } = useQuery({
     queryKey: ["medicines-all"],
     queryFn: async () => {
       const { data } = await supabase.from("medicines").select("*").order("created_at", { ascending: false });
