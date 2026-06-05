@@ -20,6 +20,19 @@ function hideGoogleMapError() {
   });
 }
 
+function watchGoogleMapError(container: HTMLElement, onFail: () => void) {
+  const check = () => {
+    const errorNode = container.querySelector(".gm-err-container, .gm-err-content");
+    if (!errorNode) return;
+    hideGoogleMapError();
+    onFail();
+  };
+  const observer = new MutationObserver(check);
+  observer.observe(container, { childList: true, subtree: true });
+  check();
+  return () => observer.disconnect();
+}
+
 function loadGmaps(): Promise<any> {
   return new Promise((resolve, reject) => {
     if (typeof window === "undefined") return reject(new Error("SSR"));
@@ -89,6 +102,7 @@ export function GoogleAddressPicker({ onPick }: { onPick: (address: string, mapU
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
+    let stopWatching: (() => void) | undefined;
     setLoading(true);
     setMapFailed(false);
     loadGmaps()
@@ -96,6 +110,10 @@ export function GoogleAddressPicker({ onPick }: { onPick: (address: string, mapU
         if (cancelled || !mapDiv.current) return;
         const center = { lat: 40.9983, lng: 71.6726 };
         mapRef.current = new g.maps.Map(mapDiv.current, { center, zoom: 13 });
+        stopWatching = watchGoogleMapError(mapDiv.current, () => {
+          setMapFailed(true);
+          setLoading(false);
+        });
         geocoderRef.current = new g.maps.Geocoder();
         mapRef.current.addListener("click", (e: any) => setMarker(e.latLng.lat(), e.latLng.lng()));
         setLoading(false);
@@ -106,7 +124,7 @@ export function GoogleAddressPicker({ onPick }: { onPick: (address: string, mapU
         setMapFailed(true);
         setLoading(false);
       });
-    return () => { cancelled = true; markerRef.current = null; mapRef.current = null; };
+    return () => { cancelled = true; stopWatching?.(); markerRef.current = null; mapRef.current = null; };
   }, [open]);
 
   const confirm = () => {
