@@ -43,7 +43,7 @@ function loadGmaps(): Promise<any> {
       s = document.createElement("script");
       s.id = SCRIPT_ID;
       s.async = true;
-      s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=geocoding&loading=async&callback=__gmapsInit`;
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&loading=async&callback=__gmapsInit`;
       s.onerror = () => {
         hideGoogleMapError();
         reject(new Error("Google Maps yuklanmadi"));
