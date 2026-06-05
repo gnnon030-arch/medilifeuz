@@ -68,7 +68,7 @@ function NewsCarousel({ items }: { items: News[] }) {
 function Home() {
   const { t } = useTranslation();
 
-  const { data: news = [] } = useQuery({
+  const { data: news = [], isLoading: newsLoading } = useQuery({
     queryKey: ["news-home"],
     queryFn: async () => {
       const { data } = await supabase.from("news").select("id, title, body, image_url").order("created_at", { ascending: false }).limit(8);
@@ -76,7 +76,7 @@ function Home() {
     },
   });
 
-  const { data: medicines = [] } = useQuery({
+  const { data: medicines = [], isLoading: medsLoading } = useQuery({
     queryKey: ["medicines-home"],
     queryFn: async () => {
       const { data } = await supabase.from("medicines").select("*").order("created_at", { ascending: false }).limit(8);
@@ -110,7 +110,7 @@ function Home() {
       {/* News */}
       <section id="yangiliklar">
         <h2 className="text-3xl font-bold mb-6">{t("home.news_title")}</h2>
-        {news.length > 0 ? <NewsCarousel items={news} /> : <p className="text-muted-foreground">{t("news.empty")}</p>}
+        {newsLoading ? <p className="text-muted-foreground">{t("common.loading")}</p> : news.length > 0 ? <NewsCarousel items={news} /> : <p className="text-muted-foreground">{t("news.empty")}</p>}
       </section>
 
       {/* Medicines */}
@@ -119,7 +119,9 @@ function Home() {
           <h2 className="text-3xl font-bold">{t("home.medicines_title")}</h2>
           <Link to="/dorilar"><Button variant="ghost" className="gap-1">{t("common.search")} <ArrowRight className="h-4 w-4" /></Button></Link>
         </div>
-        {medicines.length > 0 ? (
+        {medsLoading ? (
+          <p className="text-muted-foreground">{t("common.loading")}</p>
+        ) : medicines.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {medicines.map((m) => <MedicineCard key={m.id} m={m} />)}
           </div>

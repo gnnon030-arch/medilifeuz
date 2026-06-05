@@ -12,7 +12,7 @@ export const Route = createFileRoute("/yangiliklar")({
 
 function NewsPage() {
   const { t } = useTranslation();
-  const { data = [] } = useQuery({
+  const { data = [], isLoading } = useQuery({
     queryKey: ["news-all"],
     queryFn: async () => {
       const { data } = await supabase.from("news").select("*").order("created_at", { ascending: false });
@@ -23,7 +23,9 @@ function NewsPage() {
   return (
     <div className="container mx-auto px-4 py-10">
       <h1 className="text-4xl font-bold mb-8">{t("news.title")}</h1>
-      {data.length === 0 ? (
+      {isLoading ? (
+        <p className="text-muted-foreground">{t("common.loading")}</p>
+      ) : data.length === 0 ? (
         <p className="text-muted-foreground">{t("news.empty")}</p>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
