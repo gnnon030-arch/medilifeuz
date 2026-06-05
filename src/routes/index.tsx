@@ -110,7 +110,7 @@ function Home() {
       {/* News */}
       <section id="yangiliklar">
         <h2 className="text-3xl font-bold mb-6">{t("home.news_title")}</h2>
-        {news.length > 0 ? <NewsCarousel items={news} /> : <p className="text-muted-foreground">{t("news.empty")}</p>}
+        {newsLoading ? <p className="text-muted-foreground">{t("common.loading")}</p> : news.length > 0 ? <NewsCarousel items={news} /> : <p className="text-muted-foreground">{t("news.empty")}</p>}
       </section>
 
       {/* Medicines */}
