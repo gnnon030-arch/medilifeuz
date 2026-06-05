@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { MapPin, LocateFixed } from "lucide-react";
 import { GOOGLE_MAPS_API_KEY } from "@/lib/admin";
@@ -14,6 +14,25 @@ declare global {
 
 const SCRIPT_ID = "google-maps-js";
 
+function hideGoogleMapError() {
+  document.querySelectorAll<HTMLElement>(".gm-err-container, .gm-err-content").forEach((el) => {
+    el.style.display = "none";
+  });
+}
+
+function watchGoogleMapError(container: HTMLElement, onFail: () => void) {
+  const check = () => {
+    const errorNode = container.querySelector(".gm-err-container, .gm-err-content");
+    if (!errorNode) return;
+    hideGoogleMapError();
+    onFail();
+  };
+  const observer = new MutationObserver(check);
+  observer.observe(container, { childList: true, subtree: true });
+  check();
+  return () => observer.disconnect();
+}
+
 function loadGmaps(): Promise<any> {
   return new Promise((resolve, reject) => {
     if (typeof window === "undefined") return reject(new Error("SSR"));
@@ -24,8 +43,11 @@ function loadGmaps(): Promise<any> {
       s = document.createElement("script");
       s.id = SCRIPT_ID;
       s.async = true;
-      s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=geocoding&loading=async&callback=__gmapsInit`;
-      s.onerror = () => reject(new Error("Google Maps yuklanmadi"));
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&loading=async&callback=__gmapsInit`;
+      s.onerror = () => {
+        hideGoogleMapError();
+        reject(new Error("Google Maps yuklanmadi"));
+      };
       document.head.appendChild(s);
     } else {
       const check = setInterval(() => {
@@ -39,6 +61,7 @@ export function GoogleAddressPicker({ onPick }: { onPick: (address: string, mapU
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [mapFailed, setMapFailed] = useState(false);
   const [picked, setPicked] = useState("");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const mapDiv = useRef<HTMLDivElement>(null);
@@ -79,18 +102,29 @@ export function GoogleAddressPicker({ onPick }: { onPick: (address: string, mapU
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
+    let stopWatching: (() => void) | undefined;
     setLoading(true);
+    setMapFailed(false);
     loadGmaps()
       .then((g) => {
         if (cancelled || !mapDiv.current) return;
         const center = { lat: 40.9983, lng: 71.6726 };
         mapRef.current = new g.maps.Map(mapDiv.current, { center, zoom: 13 });
+        stopWatching = watchGoogleMapError(mapDiv.current, () => {
+          setMapFailed(true);
+          setLoading(false);
+        });
         geocoderRef.current = new g.maps.Geocoder();
         mapRef.current.addListener("click", (e: any) => setMarker(e.latLng.lat(), e.latLng.lng()));
         setLoading(false);
       })
-      .catch(() => setLoading(false));
-    return () => { cancelled = true; markerRef.current = null; mapRef.current = null; };
+      .catch(() => {
+        if (cancelled) return;
+        hideGoogleMapError();
+        setMapFailed(true);
+        setLoading(false);
+      });
+    return () => { cancelled = true; stopWatching?.(); markerRef.current = null; mapRef.current = null; };
   }, [open]);
 
   const confirm = () => {
@@ -109,7 +143,10 @@ export function GoogleAddressPicker({ onPick }: { onPick: (address: string, mapU
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-3xl">
-          <DialogHeader><DialogTitle>{t("cart.address_map_google")}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{t("cart.address_map_google")}</DialogTitle>
+            <DialogDescription>{t("cart.map_hint")}</DialogDescription>
+          </DialogHeader>
           <div className="flex gap-2">
             <Button type="button" variant="secondary" size="sm" onClick={useMyLocation} className="gap-2">
               <LocateFixed className="h-4 w-4" /> {t("cart.my_location")}
@@ -118,6 +155,7 @@ export function GoogleAddressPicker({ onPick }: { onPick: (address: string, mapU
           </div>
           <div ref={mapDiv} className="w-full h-[420px] rounded-md bg-muted" />
           {loading && <p className="text-sm text-muted-foreground">{t("common.loading")}</p>}
+          {mapFailed && <p className="text-sm text-muted-foreground">{t("cart.google_map_unavailable")}</p>}
           {picked && (
             <p className="text-sm">
               <span className="text-muted-foreground">{t("cart.address_picked")}:</span> <span className="font-medium">{picked}</span>
