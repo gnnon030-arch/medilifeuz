@@ -119,7 +119,9 @@ function Home() {
           <h2 className="text-3xl font-bold">{t("home.medicines_title")}</h2>
           <Link to="/dorilar"><Button variant="ghost" className="gap-1">{t("common.search")} <ArrowRight className="h-4 w-4" /></Button></Link>
         </div>
-        {medicines.length > 0 ? (
+        {medsLoading ? (
+          <p className="text-muted-foreground">{t("common.loading")}</p>
+        ) : medicines.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {medicines.map((m) => <MedicineCard key={m.id} m={m} />)}
           </div>
