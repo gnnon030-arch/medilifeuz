@@ -68,7 +68,7 @@ function NewsCarousel({ items }: { items: News[] }) {
 function Home() {
   const { t } = useTranslation();
 
-  const { data: news = [] } = useQuery({
+  const { data: news = [], isLoading: newsLoading } = useQuery({
     queryKey: ["news-home"],
     queryFn: async () => {
       const { data } = await supabase.from("news").select("id, title, body, image_url").order("created_at", { ascending: false }).limit(8);
@@ -76,7 +76,7 @@ function Home() {
     },
   });
 
-  const { data: medicines = [] } = useQuery({
+  const { data: medicines = [], isLoading: medsLoading } = useQuery({
     queryKey: ["medicines-home"],
     queryFn: async () => {
       const { data } = await supabase.from("medicines").select("*").order("created_at", { ascending: false }).limit(8);
