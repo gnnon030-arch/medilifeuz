@@ -49,9 +49,7 @@ function CartPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("+998 ");
   const [addrMethod, setAddrMethod] = useState<AddrMethod>("text");
-  const [addressText, setAddressText] = useState("");
-  const [addressGoogle, setAddressGoogle] = useState("");
-  const [addressGoogleUrl, setAddressGoogleUrl] = useState<string | undefined>();
+    const [addressText, setAddressText] = useState("");
   const [addressYandex, setAddressYandex] = useState("");
   const [addressYandexUrl, setAddressYandexUrl] = useState<string | undefined>();
   const [note, setNote] = useState("");
