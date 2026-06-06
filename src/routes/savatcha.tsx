@@ -30,7 +30,7 @@ function formatNamanganTime(d: Date): string {
   return `${get("day")}.${get("month")}.${get("year")} ${get("hour")}:${get("minute")}`;
 }
 
-type AddrMethod = "text" | "google" | "yandex";
+type AddrMethod = "text" | "yandex";
 
 function CartPage() {
   const { t } = useTranslation();
