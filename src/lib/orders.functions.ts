@@ -29,7 +29,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     const ids = data.items.map((i) => i.medicine_id);
     const { data: meds, error: merr } = await supabaseAdmin
       .from("medicines")
-      .select("id, name, price, stock")
+      .select("id, name, price")
       .in("id", ids);
     if (merr) throw new Error(merr.message);
     const medMap = new Map((meds ?? []).map((m: any) => [m.id, m]));
@@ -37,7 +37,6 @@ export const placeOrder = createServerFn({ method: "POST" })
     const resolved = data.items.map((i) => {
       const m: any = medMap.get(i.medicine_id);
       if (!m) throw new Error("Dori topilmadi");
-      if (Number(m.stock) < i.quantity) throw new Error(`Yetarli zaxira yo'q: ${m.name}`);
       const unit_price = Number(m.price);
       return {
         medicine_id: i.medicine_id,
@@ -75,14 +74,6 @@ export const placeOrder = createServerFn({ method: "POST" })
     const { error: ierr } = await supabaseAdmin.from("order_items").insert(items);
     if (ierr) throw new Error(ierr.message);
 
-    // 4) decrement stock
-    for (const i of resolved) {
-      const m: any = medMap.get(i.medicine_id);
-      await supabaseAdmin
-        .from("medicines")
-        .update({ stock: Math.max(0, Number(m.stock) - i.quantity) })
-        .eq("id", i.medicine_id);
-    }
 
     // 5) Telegram notify
     const token = process.env.TELEGRAM_BOT_TOKEN;

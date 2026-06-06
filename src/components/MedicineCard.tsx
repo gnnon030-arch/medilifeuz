@@ -24,10 +24,6 @@ export function MedicineCard({ m }: { m: Medicine }) {
   const qty = inCart?.quantity ?? 0;
 
   const onAdd = () => {
-    if (m.stock <= qty) {
-      toast.error(t("common.out_of_stock"));
-      return;
-    }
     add({ id: m.id, name: m.name, price: Number(m.price), unit: m.unit, image_url: m.image_url });
     toast.success(`${m.name} — ${t("cart.add")}`, {
       duration: 5000,
@@ -58,17 +54,17 @@ export function MedicineCard({ m }: { m: Medicine }) {
         <div className="text-lg font-bold text-primary">
           {Number(m.price).toLocaleString()} {t("common.sum")}
         </div>
-        <div className="text-xs text-muted-foreground">{m.unit} · {m.stock > 0 ? `${t("common.stock")}: ${m.stock}` : t("common.out_of_stock")}</div>
+        <div className="text-xs text-muted-foreground">{m.unit}</div>
         <div className="mt-auto">
           {qty === 0 ? (
-            <Button onClick={onAdd} className="w-full gap-1" size="sm" disabled={m.stock <= 0}>
+            <Button onClick={onAdd} className="w-full gap-1" size="sm">
               <Plus className="h-4 w-4" /> {t("common.add")}
             </Button>
           ) : (
             <div className="flex items-center justify-between gap-2">
               <Button onClick={onRemove} variant="outline" size="icon"><Minus className="h-4 w-4" /></Button>
               <span className="font-semibold">{qty}</span>
-              <Button onClick={onAdd} size="icon" disabled={qty >= m.stock}><Plus className="h-4 w-4" /></Button>
+              <Button onClick={onAdd} size="icon"><Plus className="h-4 w-4" /></Button>
             </div>
           )}
         </div>
