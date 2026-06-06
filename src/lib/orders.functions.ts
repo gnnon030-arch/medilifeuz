@@ -29,7 +29,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     const ids = data.items.map((i) => i.medicine_id);
     const { data: meds, error: merr } = await supabaseAdmin
       .from("medicines")
-      .select("id, name, price, stock")
+      .select("id, name, price")
       .in("id", ids);
     if (merr) throw new Error(merr.message);
     const medMap = new Map((meds ?? []).map((m: any) => [m.id, m]));
@@ -37,8 +37,15 @@ export const placeOrder = createServerFn({ method: "POST" })
     const resolved = data.items.map((i) => {
       const m: any = medMap.get(i.medicine_id);
       if (!m) throw new Error("Dori topilmadi");
-      if (Number(m.stock) < i.quantity) throw new Error(`Yetarli zaxira yo'q: ${m.name}`);
       const unit_price = Number(m.price);
+      return {
+        medicine_id: i.medicine_id,
+        medicine_name: m.name as string,
+        unit_price,
+        quantity: i.quantity,
+        line_total: unit_price * i.quantity,
+      };
+    });
       return {
         medicine_id: i.medicine_id,
         medicine_name: m.name as string,
