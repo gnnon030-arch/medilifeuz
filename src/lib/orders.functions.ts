@@ -46,14 +46,6 @@ export const placeOrder = createServerFn({ method: "POST" })
         line_total: unit_price * i.quantity,
       };
     });
-      return {
-        medicine_id: i.medicine_id,
-        medicine_name: m.name as string,
-        unit_price,
-        quantity: i.quantity,
-        line_total: unit_price * i.quantity,
-      };
-    });
 
     const subtotal = resolved.reduce((s, i) => s + i.line_total, 0);
     const total = subtotal + delivery_fee;
@@ -82,14 +74,6 @@ export const placeOrder = createServerFn({ method: "POST" })
     const { error: ierr } = await supabaseAdmin.from("order_items").insert(items);
     if (ierr) throw new Error(ierr.message);
 
-    // 4) decrement stock
-    for (const i of resolved) {
-      const m: any = medMap.get(i.medicine_id);
-      await supabaseAdmin
-        .from("medicines")
-        .update({ stock: Math.max(0, Number(m.stock) - i.quantity) })
-        .eq("id", i.medicine_id);
-    }
 
     // 5) Telegram notify
     const token = process.env.TELEGRAM_BOT_TOKEN;
