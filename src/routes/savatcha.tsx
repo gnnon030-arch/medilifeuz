@@ -190,9 +190,8 @@ function CartPage() {
               <div className="space-y-2">
                 <Label>{t("cart.address_method")}</Label>
                 <Tabs value={addrMethod} onValueChange={(v) => setAddrMethod(v as AddrMethod)}>
-                  <TabsList className="grid w-full grid-cols-3">
+                  <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="text">{t("cart.address_method_text")}</TabsTrigger>
-                    <TabsTrigger value="google">{t("cart.address_method_google")}</TabsTrigger>
                     <TabsTrigger value="yandex">{t("cart.address_method_yandex")}</TabsTrigger>
                   </TabsList>
 
@@ -205,13 +204,6 @@ function CartPage() {
                     <p className={`text-xs ${textNonSpaceLen < 20 ? "text-destructive" : "text-muted-foreground"}`}>
                       {textNonSpaceLen}/20 {textNonSpaceLen < 20 ? `— ${t("cart.address_min")}` : "✓"}
                     </p>
-                  </TabsContent>
-
-                  <TabsContent value="google" className="space-y-2 mt-3">
-                    <GoogleAddressPicker onPick={(a, url) => { setAddressGoogle(a); setAddressGoogleUrl(url); }} />
-                    {addressGoogle && (
-                      <p className="text-sm"><span className="text-muted-foreground">{t("cart.address_picked")}:</span> <span className="font-medium">{addressGoogle}</span></p>
-                    )}
                   </TabsContent>
 
                   <TabsContent value="yandex" className="space-y-2 mt-3">
