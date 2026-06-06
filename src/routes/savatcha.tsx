@@ -14,7 +14,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { formatPhone, isValidPhone } from "@/lib/phone";
 import { placeOrder } from "@/lib/orders.functions";
 import { YandexAddressPicker } from "@/components/YandexAddressPicker";
-import { GoogleAddressPicker } from "@/components/GoogleAddressPicker";
 
 export const Route = createFileRoute("/savatcha")({
   component: CartPage,
