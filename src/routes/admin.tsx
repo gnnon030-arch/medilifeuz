@@ -226,7 +226,7 @@ function BranchesAdmin() {
 
   const save = async (b: any) => {
     try {
-      await saveFn({ data: { id: b.id, name: b.name, image_url: b.image_url || null, phone: b.phone, address: b.address, map_url: b.map_url, map_type: b.map_type ?? "google", google_map_url: b.google_map_url || null, yandex_map_url: b.yandex_map_url || null } });
+      await saveFn({ data: { id: b.id, name: b.name, image_url: b.image_url || null, phone: b.phone, address: b.address, map_url: b.map_url, map_type: "yandex", google_map_url: null, yandex_map_url: b.yandex_map_url || null } });
       toast.success("Saqlandi"); setOpen(false); refetch();
     } catch { toast.error("Saqlashda xatolik. Qayta urinib ko'ring."); }
   };
@@ -235,7 +235,7 @@ function BranchesAdmin() {
   return (
     <div className="space-y-4">
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild><Button onClick={() => setEditing({ name: "", image_url: "", phone: "", address: "", map_url: "", map_type: "google", google_map_url: "", yandex_map_url: "" })} className="gap-1"><Plus className="h-4 w-4" /> Qo'shish</Button></DialogTrigger>
+        <DialogTrigger asChild><Button onClick={() => setEditing({ name: "", image_url: "", phone: "", address: "", map_url: "", map_type: "yandex", yandex_map_url: "" })} className="gap-1"><Plus className="h-4 w-4" /> Qo'shish</Button></DialogTrigger>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Filial</DialogTitle></DialogHeader>
           {editing && <div className="space-y-3">
@@ -243,20 +243,8 @@ function BranchesAdmin() {
             <div><Label>Rasm</Label><ImageInput value={editing.image_url ?? ""} onChange={(v) => setEditing({ ...editing, image_url: v })} /></div>
             <div><Label>Telefon</Label><Input value={editing.phone ?? ""} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} /></div>
             <div><Label>Manzil (matn)</Label><Input value={editing.address ?? ""} onChange={(e) => setEditing({ ...editing, address: e.target.value })} placeholder="Ko'cha, uy, mo'ljal..." /></div>
-            <div><Label>Google Maps havolasi</Label><Input value={editing.google_map_url ?? ""} placeholder="https://maps.google.com/..." onChange={(e) => setEditing({ ...editing, google_map_url: e.target.value })} /></div>
             <div><Label>Yandex Maps havolasi</Label><Input value={editing.yandex_map_url ?? ""} placeholder="https://yandex.uz/maps/..." onChange={(e) => setEditing({ ...editing, yandex_map_url: e.target.value })} /></div>
-            <div>
-              <Label>Asosiy karta turi (preview uchun)</Label>
-              <Select value={editing.map_type ?? "google"} onValueChange={(v) => setEditing({ ...editing, map_type: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="text">Matn (faqat manzil)</SelectItem>
-                  <SelectItem value="google">Google Maps</SelectItem>
-                  <SelectItem value="yandex">Yandex Maps</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={() => save({ ...editing, map_type: editing.map_type ?? "google" })} className="w-full">Saqlash</Button>
+            <Button onClick={() => save({ ...editing, map_type: "yandex" })} className="w-full">Saqlash</Button>
           </div>}
         </DialogContent>
       </Dialog>
