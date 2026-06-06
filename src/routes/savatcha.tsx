@@ -14,7 +14,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { formatPhone, isValidPhone } from "@/lib/phone";
 import { placeOrder } from "@/lib/orders.functions";
 import { YandexAddressPicker } from "@/components/YandexAddressPicker";
-import { GoogleAddressPicker } from "@/components/GoogleAddressPicker";
 
 export const Route = createFileRoute("/savatcha")({
   component: CartPage,
@@ -31,7 +30,7 @@ function formatNamanganTime(d: Date): string {
   return `${get("day")}.${get("month")}.${get("year")} ${get("hour")}:${get("minute")}`;
 }
 
-type AddrMethod = "text" | "google" | "yandex";
+type AddrMethod = "text" | "yandex";
 
 function CartPage() {
   const { t } = useTranslation();
@@ -50,9 +49,7 @@ function CartPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("+998 ");
   const [addrMethod, setAddrMethod] = useState<AddrMethod>("text");
-  const [addressText, setAddressText] = useState("");
-  const [addressGoogle, setAddressGoogle] = useState("");
-  const [addressGoogleUrl, setAddressGoogleUrl] = useState<string | undefined>();
+    const [addressText, setAddressText] = useState("");
   const [addressYandex, setAddressYandex] = useState("");
   const [addressYandexUrl, setAddressYandexUrl] = useState<string | undefined>();
   const [note, setNote] = useState("");
@@ -87,10 +84,6 @@ function CartPage() {
       const nonSpace = addressText.replace(/\s+/g, "");
       if (nonSpace.length < 20) return toast.error(t("cart.address_min"));
       finalAddress = addressText.trim();
-    } else if (addrMethod === "google") {
-      if (!addressGoogle.trim()) return toast.error(t("cart.address_text"));
-      finalAddress = addressGoogle.trim();
-      mapUrl = addressGoogleUrl;
     } else {
       if (!addressYandex.trim()) return toast.error(t("cart.address_text"));
       finalAddress = addressYandex.trim();
@@ -197,9 +190,8 @@ function CartPage() {
               <div className="space-y-2">
                 <Label>{t("cart.address_method")}</Label>
                 <Tabs value={addrMethod} onValueChange={(v) => setAddrMethod(v as AddrMethod)}>
-                  <TabsList className="grid w-full grid-cols-3">
+                  <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="text">{t("cart.address_method_text")}</TabsTrigger>
-                    <TabsTrigger value="google">{t("cart.address_method_google")}</TabsTrigger>
                     <TabsTrigger value="yandex">{t("cart.address_method_yandex")}</TabsTrigger>
                   </TabsList>
 
@@ -212,13 +204,6 @@ function CartPage() {
                     <p className={`text-xs ${textNonSpaceLen < 20 ? "text-destructive" : "text-muted-foreground"}`}>
                       {textNonSpaceLen}/20 {textNonSpaceLen < 20 ? `— ${t("cart.address_min")}` : "✓"}
                     </p>
-                  </TabsContent>
-
-                  <TabsContent value="google" className="space-y-2 mt-3">
-                    <GoogleAddressPicker onPick={(a, url) => { setAddressGoogle(a); setAddressGoogleUrl(url); }} />
-                    {addressGoogle && (
-                      <p className="text-sm"><span className="text-muted-foreground">{t("cart.address_picked")}:</span> <span className="font-medium">{addressGoogle}</span></p>
-                    )}
                   </TabsContent>
 
                   <TabsContent value="yandex" className="space-y-2 mt-3">

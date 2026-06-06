@@ -32,7 +32,6 @@ function BranchesPage() {
         <div className="grid md:grid-cols-2 gap-6">
           {data.map((b: any) => {
             const q = encodeURIComponent(b.address || b.name || "Namangan");
-            const googleEmbed = b.google_map_url ? `https://www.google.com/maps?q=${q}&output=embed` : null;
             const yandexEmbed = b.yandex_map_url ? `https://yandex.uz/map-widget/v1/?text=${q}&z=15&l=map` : null;
             return (
               <Card key={b.id} className="overflow-hidden">
@@ -49,33 +48,19 @@ function BranchesPage() {
                   {b.address && <p className="text-sm flex items-start gap-2"><MapPin className="h-4 w-4 mt-0.5 text-primary shrink-0" />{b.address}</p>}
                   {b.phone && <p className="text-sm flex items-center gap-2"><Phone className="h-4 w-4 text-primary" /><a href={`tel:${b.phone}`}>{b.phone}</a></p>}
 
-                  {(googleEmbed || yandexEmbed) && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {googleEmbed && (
-                        <div className="aspect-video rounded-md overflow-hidden border">
-                          <iframe src={googleEmbed} width="100%" height="100%" style={{ border: 0 }} loading="lazy" referrerPolicy="no-referrer-when-downgrade" title={`${b.name} — Google`} />
-                        </div>
-                      )}
-                      {yandexEmbed && (
-                        <div className="aspect-video rounded-md overflow-hidden border">
-                          <iframe src={yandexEmbed} width="100%" height="100%" style={{ border: 0 }} loading="lazy" referrerPolicy="no-referrer-when-downgrade" title={`${b.name} — Yandex`} />
-                        </div>
-                      )}
+                  {yandexEmbed && (
+                    <div className="aspect-video rounded-md overflow-hidden border">
+                      <iframe src={yandexEmbed} width="100%" height="100%" style={{ border: 0 }} loading="lazy" referrerPolicy="no-referrer-when-downgrade" title={`${b.name} — Yandex`} />
                     </div>
                   )}
 
                   <div className="flex flex-wrap gap-2">
-                    {b.google_map_url && (
-                      <a href={b.google_map_url} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" size="sm" className="gap-2"><ExternalLink className="h-4 w-4" /> {t("branches.view_google")}</Button>
-                      </a>
-                    )}
                     {b.yandex_map_url && (
                       <a href={b.yandex_map_url} target="_blank" rel="noopener noreferrer">
                         <Button variant="outline" size="sm" className="gap-2"><ExternalLink className="h-4 w-4" /> {t("branches.view_yandex")}</Button>
                       </a>
                     )}
-                    {!b.google_map_url && !b.yandex_map_url && b.map_url && (
+                    {!b.yandex_map_url && b.map_url && (
                       <a href={b.map_url} target="_blank" rel="noopener noreferrer">
                         <Button variant="outline" size="sm" className="gap-2"><ExternalLink className="h-4 w-4" /> {t("branches.view_map")}</Button>
                       </a>
