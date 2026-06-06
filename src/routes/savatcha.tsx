@@ -84,10 +84,6 @@ function CartPage() {
       const nonSpace = addressText.replace(/\s+/g, "");
       if (nonSpace.length < 20) return toast.error(t("cart.address_min"));
       finalAddress = addressText.trim();
-    } else if (addrMethod === "google") {
-      if (!addressGoogle.trim()) return toast.error(t("cart.address_text"));
-      finalAddress = addressGoogle.trim();
-      mapUrl = addressGoogleUrl;
     } else {
       if (!addressYandex.trim()) return toast.error(t("cart.address_text"));
       finalAddress = addressYandex.trim();
