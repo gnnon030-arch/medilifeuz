@@ -83,6 +83,7 @@ export const adminDeleteNews = createServerFn({ method: "POST" })
 const MedicineSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().min(1).max(180),
+  name_cyrl: z.string().max(180).nullable().optional(),
   description: z.string().max(5000).nullable().optional(),
   image_url: z.string().max(1000).nullable().optional(),
   price: z.number().min(0),
