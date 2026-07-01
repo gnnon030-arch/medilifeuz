@@ -106,7 +106,7 @@ export const adminSaveMedicine = createServerFn({ method: "POST" })
   .inputValidator((i) => MedicineSchema.parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
-    const payload = { name: data.name, description: data.description ?? null, image_url: data.image_url || null, price: data.price, unit: data.unit, stock: data.stock };
+    const payload = { name: data.name, name_cyrl: data.name_cyrl || null, description: data.description ?? null, image_url: data.image_url || null, price: data.price, unit: data.unit, stock: data.stock };
     const query = data.id ? supabaseAdmin.from("medicines").update(payload).eq("id", data.id) : supabaseAdmin.from("medicines").insert(payload);
     const { error } = await query;
     if (error) throw new Error(error.message);
