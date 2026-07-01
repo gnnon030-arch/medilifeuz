@@ -172,7 +172,7 @@ function MedicinesAdmin() {
 
   const save = async (m: any) => {
     try {
-      await saveFn({ data: { id: m.id, name: m.name, description: m.description, image_url: m.image_url || null, price: Number(m.price) || 0, unit: m.unit, stock: parseInt(m.stock) || 0 } });
+      await saveFn({ data: { id: m.id, name: m.name, name_cyrl: m.name_cyrl || null, description: m.description, image_url: m.image_url || null, price: Number(m.price) || 0, unit: m.unit, stock: parseInt(m.stock) || 0 } });
       toast.success("Saqlandi"); setOpen(false); refetch();
     } catch { toast.error("Saqlashda xatolik. Qayta urinib ko'ring."); }
   };
@@ -180,18 +180,18 @@ function MedicinesAdmin() {
   return (
     <div className="space-y-4">
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild><Button onClick={() => setEditing({ name: "", description: "", image_url: "", price: 0, unit: "1 dona", stock: 0 })} className="gap-1"><Plus className="h-4 w-4" /> Qo'shish</Button></DialogTrigger>
+        <DialogTrigger asChild><Button onClick={() => setEditing({ name: "", name_cyrl: "", description: "", image_url: "", price: 0, unit: "1 dona", stock: 0 })} className="gap-1"><Plus className="h-4 w-4" /> Qo'shish</Button></DialogTrigger>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Dori</DialogTitle></DialogHeader>
           {editing && <div className="space-y-3">
-            <div><Label>Nomi</Label><Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></div>
+            <div><Label>Nomi (Lotin)</Label><Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="Masalan: Paratsetamol" /></div>
+            <div><Label>Nomi (Kirill)</Label><Input value={editing.name_cyrl ?? ""} onChange={(e) => setEditing({ ...editing, name_cyrl: e.target.value })} placeholder="Масалан: Парацетамол" /></div>
             <div><Label>Tavsif</Label><Textarea rows={3} value={editing.description ?? ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })} /></div>
             <div><Label>Rasm (URL yoki yuklash)</Label><ImageInput value={editing.image_url ?? ""} onChange={(v) => setEditing({ ...editing, image_url: v })} /></div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Narx (so'm)</Label><Input type="number" value={editing.price} onChange={(e) => setEditing({ ...editing, price: e.target.value })} /></div>
               <div><Label>Birlik</Label><Input value={editing.unit} placeholder="1 dona / 1 paket / 1 g" onChange={(e) => setEditing({ ...editing, unit: e.target.value })} /></div>
             </div>
-            <div><Label>Mavjud miqdor</Label><Input type="number" value={editing.stock} onChange={(e) => setEditing({ ...editing, stock: e.target.value })} /></div>
             <Button onClick={() => save(editing)} className="w-full">Saqlash</Button>
           </div>}
         </DialogContent>
