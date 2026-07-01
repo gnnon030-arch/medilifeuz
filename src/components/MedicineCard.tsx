@@ -26,8 +26,8 @@ export function MedicineCard({ m }: { m: Medicine }) {
   const displayName = i18n.language === "uz_cyrl" && m.name_cyrl ? m.name_cyrl : m.name;
 
   const onAdd = () => {
-    add({ id: m.id, name: m.name, price: Number(m.price), unit: m.unit, image_url: m.image_url });
-    toast.success(`${m.name} — ${t("cart.add")}`, {
+    add({ id: m.id, name: displayName, price: Number(m.price), unit: m.unit, image_url: m.image_url });
+    toast.success(`${displayName} — ${t("cart.add")}`, {
       duration: 5000,
       action: {
         label: t("nav.cart"),
@@ -39,20 +39,20 @@ export function MedicineCard({ m }: { m: Medicine }) {
   const onRemove = () => {
     if (qty <= 0) return;
     remove(m.id);
-    toast(`${m.name} — ${t("cart.remove")}`);
+    toast(`${displayName} — ${t("cart.remove")}`);
   };
 
   return (
     <Card className="overflow-hidden flex flex-col group hover:shadow-lg transition-shadow">
       <div className="aspect-square bg-muted overflow-hidden">
         {m.image_url ? (
-          <img src={m.image_url} alt={m.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+          <img src={m.image_url} alt={displayName} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">No image</div>
         )}
       </div>
       <div className="p-3 flex flex-col gap-2 flex-1">
-        <h3 className="font-semibold line-clamp-2 min-h-[2.5rem]">{m.name}</h3>
+        <h3 className="font-semibold line-clamp-2 min-h-[2.5rem]">{displayName}</h3>
         <div className="text-lg font-bold text-primary">
           {Number(m.price).toLocaleString()} {t("common.sum")}
         </div>
