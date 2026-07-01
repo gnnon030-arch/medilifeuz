@@ -23,7 +23,10 @@ function MedicinesPage() {
     },
   });
 
-  const filtered = data.filter((m) => m.name.toLowerCase().includes(q.toLowerCase()));
+  const filtered = data.filter((m) => {
+    const s = q.toLowerCase();
+    return m.name.toLowerCase().includes(s) || (m.name_cyrl ?? "").toLowerCase().includes(s);
+  });
 
   return (
     <div className="container mx-auto px-4 py-10">
