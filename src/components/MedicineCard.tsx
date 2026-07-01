@@ -9,6 +9,7 @@ import { useCart } from "@/hooks/use-cart";
 export type Medicine = {
   id: string;
   name: string;
+  name_cyrl?: string | null;
   description: string | null;
   image_url: string | null;
   price: number;
@@ -17,11 +18,12 @@ export type Medicine = {
 };
 
 export function MedicineCard({ m }: { m: Medicine }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { items, add, remove } = useCart();
   const navigate = useNavigate();
   const inCart = items.find((x) => x.id === m.id);
   const qty = inCart?.quantity ?? 0;
+  const displayName = i18n.language === "uz_cyrl" && m.name_cyrl ? m.name_cyrl : m.name;
 
   const onAdd = () => {
     add({ id: m.id, name: m.name, price: Number(m.price), unit: m.unit, image_url: m.image_url });
