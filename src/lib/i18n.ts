@@ -32,36 +32,6 @@ const resources = {
       footer: { tagline: "Sog'lig'ingiz uchun ishonchli onlayn dorixona. Eng sara va arzon dorilar — Namangan shahrida.", call_center: "Call markaz", manager: "Mas'ul", manager_name: "Abdulquddus Odilov", address: "Namangan shahri, O'zbekiston", rights: "© 2000 MediLife. Barcha huquqlar himoyalangan." },
     },
   },
-  ru: {
-    translation: {
-      nav: { home: "Главная", news: "Новости", medicines: "Лекарства", branches: "Наши филиалы", cart: "Корзина", profile: "Профиль", orders: "Мои заказы" },
-      home: { hero_title: "Лучшие и доступные лекарства", hero_sub: "MediLife — надёжная онлайн-аптека", cta: "Смотреть лекарства", news_title: "Новости", medicines_title: "Лекарства", about_title: "О нас", about_text: "MediLife — это современная сеть аптек, расположенная в Намангане. Наша цель — обеспечить каждую семью качественными и доступными лекарствами." },
-      cart: { add: "Добавлено в корзину", remove: "Убрано из корзины", empty: "Корзина пуста", checkout: "Оформление", delivery_only: "Только через службу доставки", delivery_free_city: "Доставка по всему городу бесплатно", total: "Итого", subtotal: "Товары", delivery_fee: "Доставка", submit: "Заказать", submitted: "Заказ отправлен!", current_time: "Текущее время (Узбекистан Наманган)", address_text: "Адрес (текст)", address_text_ph: "Улица, дом, квартира... (минимум 20 символов)", address_map: "Выбрать в Yandex Картах", address_map_google: "Выбрать в Google Maps", address_map_btn: "Выбрать через Yandex Карты", address_map_btn_google: "Выбрать через Google Maps", address_picked: "Выбранный адрес", address_method: "Способ ввода адреса", address_method_text: "Текст", address_method_google: "Google Maps", address_method_yandex: "Yandex Maps", address_min: "Адрес должен содержать не менее 20 символов (пробелы не считаются)", note_ph: "Заметка (необязательно)", order_list: "Список заказа", my_location: "Моё местоположение", map_hint: "Кликните по карте или перетащите маркер", delete_order: "Удалить заказ", google_map_unavailable: "Google Maps сейчас не загрузился. Пожалуйста, используйте Yandex Maps или текстовый адрес." },
-      auth: { login: "Войти", register: "Регистрация", logout: "Выйти", google: "Продолжить с Google", email: "Email", password: "Пароль", confirm_password: "Повторите пароль", full_name: "Имя", phone: "Телефон", passwords_mismatch: "Пароли не совпадают", phone_invalid: "Неверный телефон", success_signup: "Регистрация прошла успешно", success_login: "Добро пожаловать" },
-      common: { loading: "Загрузка...", save: "Сохранить", cancel: "Отмена", delete: "Удалить", edit: "Изменить", add: "Добавить", search: "Поиск", language: "Язык", theme: "Тема", stock: "В наличии", out_of_stock: "Нет в наличии", sum: "сум", confirm: "Подтвердить", close: "Закрыть" },
-      news: { title: "Новости", empty: "Новостей нет" },
-      medicines: { title: "Лекарства", empty: "Нет лекарств" },
-      branches: { title: "Наши филиалы", view_map: "Открыть карту", view_google: "Открыть в Google Maps", view_yandex: "Открыть в Yandex Maps", empty: "Филиалов пока нет" },
-      admin: { title: "Админ панель", tabs: { news: "Новости", medicines: "Лекарства", branches: "Филиалы", orders: "Заказы" } },
-      orders: { title: "Мои заказы", status: { pending: "Ожидание", confirmed: "Подтверждён", delivering: "Доставляется", delivered: "Доставлен", cancelled: "Отменён" }, rate: "Оценить", rating: "Рейтинг", comment: "Отзыв" },
-      footer: { tagline: "Надёжная онлайн-аптека для вашего здоровья. Лучшие и доступные лекарства — в г. Наманган.", call_center: "Колл-центр", manager: "Ответственный", manager_name: "Абдулкуддус Одилов", address: "г. Наманган, Узбекистан", rights: "© 2000 MediLife. Все права защищены." },
-    },
-  },
-  en: {
-    translation: {
-      nav: { home: "Home", news: "News", medicines: "Medicines", branches: "Our Branches", cart: "Cart", profile: "Profile", orders: "My Orders" },
-      home: { hero_title: "Best & affordable medicines", hero_sub: "MediLife — trusted online pharmacy", cta: "Browse medicines", news_title: "News", medicines_title: "Medicines", about_title: "About us", about_text: "MediLife is a modern pharmacy chain located in Namangan. Our goal is to provide quality and affordable medicines to every family." },
-      cart: { add: "Added to cart", remove: "Removed from cart", empty: "Cart is empty", checkout: "Checkout", delivery_only: "Delivery service only", delivery_free_city: "Delivery is free across the city", total: "Total", subtotal: "Subtotal", delivery_fee: "Delivery", submit: "Place order", submitted: "Order placed!", current_time: "Current time (Uzbekistan Namangan)", address_text: "Address (text)", address_text_ph: "Street, house, apartment... (at least 20 chars)", address_map: "Pick on Yandex map", address_map_google: "Pick on Google Maps", address_map_btn: "Pick via Yandex Maps", address_map_btn_google: "Pick via Google Maps", address_picked: "Picked address", address_method: "Address input method", address_method_text: "Text", address_method_google: "Google Maps", address_method_yandex: "Yandex Maps", address_min: "Address must be at least 20 characters (spaces don't count)", note_ph: "Note (optional)", order_list: "Order list", my_location: "My location", map_hint: "Click the map or drag the marker", delete_order: "Delete order", google_map_unavailable: "Google Maps did not load right now. Please use Yandex Maps or a text address." },
-      auth: { login: "Login", register: "Sign up", logout: "Logout", google: "Continue with Google", email: "Email", password: "Password", confirm_password: "Confirm password", full_name: "Name", phone: "Phone number", passwords_mismatch: "Passwords don't match", phone_invalid: "Invalid phone", success_signup: "Account created", success_login: "Welcome" },
-      common: { loading: "Loading...", save: "Save", cancel: "Cancel", delete: "Delete", edit: "Edit", add: "Add", search: "Search", language: "Language", theme: "Theme", stock: "In stock", out_of_stock: "Out of stock", sum: "sum", confirm: "Confirm", close: "Close" },
-      news: { title: "News", empty: "No news" },
-      medicines: { title: "Medicines", empty: "No medicines" },
-      branches: { title: "Our Branches", view_map: "Open map", view_google: "Open in Google Maps", view_yandex: "Open in Yandex Maps", empty: "No branches yet" },
-      admin: { title: "Admin Panel", tabs: { news: "News", medicines: "Medicines", branches: "Branches", orders: "Orders" } },
-      orders: { title: "My Orders", status: { pending: "Pending", confirmed: "Confirmed", delivering: "Delivering", delivered: "Delivered", cancelled: "Cancelled" }, rate: "Rate", rating: "Rating", comment: "Comment" },
-      footer: { tagline: "Trusted online pharmacy for your health. Best & affordable medicines — in Namangan.", call_center: "Call center", manager: "Manager", manager_name: "Abdulquddus Odilov", address: "Namangan, Uzbekistan", rights: "© 2000 MediLife. All rights reserved." },
-    },
-  },
 };
 
 if (!i18n.isInitialized) {
