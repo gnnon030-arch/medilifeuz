@@ -36,7 +36,7 @@ const resources = {
 
 if (!i18n.isInitialized) {
   const stored = typeof window !== "undefined" ? localStorage.getItem("medilife-lang") : null;
-  const valid = ["uz_cyrl", "uz", "ru", "en"];
+  const valid = ["uz_cyrl", "uz"];
   const initial = stored && valid.includes(stored) ? stored : "uz_cyrl";
   i18n.use(initReactI18next).init({
     resources,
