@@ -56,7 +56,6 @@ export function MedicineCard({ m }: { m: Medicine }) {
         <div className="text-lg font-bold text-primary">
           {Number(m.price).toLocaleString()} {t("common.sum")}
         </div>
-        <div className="text-xs text-muted-foreground">{m.unit}</div>
         <div className="mt-auto">
           {qty === 0 ? (
             <Button onClick={onAdd} className="w-full gap-1" size="sm">
