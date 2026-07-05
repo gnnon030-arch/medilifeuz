@@ -168,9 +168,59 @@ function MedicinesAdmin() {
   const listFn = useServerFn(adminListMedicines);
   const saveFn = useServerFn(adminSaveMedicine);
   const deleteFn = useServerFn(adminDeleteMedicine);
+  const bulkFn = useServerFn(adminBulkImportMedicines);
   const { data = [], refetch } = useQuery({ queryKey: ["admin-meds"], queryFn: () => listFn({ data: {} }) });
   const [editing, setEditing] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState<string>("");
+
+  const handleXlsxImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setImporting(true);
+    setImportProgress("Fayl o'qilmoqda...");
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<any>(sheet, { defval: "" });
+
+      const norm = (k: string) => k.toString().trim().toLowerCase().replace(/\s+/g, "_");
+      const parsed = rows.map((r) => {
+        const obj: any = {};
+        for (const k of Object.keys(r)) obj[norm(k)] = r[k];
+        const name = String(obj.name ?? obj.nomi ?? obj["nomi_(lotin)"] ?? obj.lotin ?? "").trim();
+        const name_cyrl = String(obj.name_cyrl ?? obj["nomi_(kirill)"] ?? obj.kirill ?? "").trim();
+        const priceRaw = obj.price ?? obj.narx ?? 0;
+        const price = Number(String(priceRaw).replace(/[^0-9.]/g, "")) || 0;
+        const image_url = String(obj.image_url ?? obj.rasm ?? "").trim();
+        return { name, name_cyrl: name_cyrl || null, price, image_url: image_url || null };
+      }).filter((r) => r.name);
+
+      if (parsed.length === 0) {
+        toast.error("Faylda 'name' ustuni bo'lgan qatorlar topilmadi");
+        return;
+      }
+
+      let total = 0;
+      const chunkSize = 500;
+      for (let i = 0; i < parsed.length; i += chunkSize) {
+        const chunk = parsed.slice(i, i + chunkSize);
+        setImportProgress(`Yuklanmoqda: ${i}/${parsed.length}...`);
+        const res = await bulkFn({ data: { items: chunk } });
+        total += res.inserted;
+      }
+      toast.success(`${total} ta dori muvaffaqiyatli yuklandi`);
+      refetch();
+    } catch (err: any) {
+      toast.error(err.message || "Faylni yuklashda xatolik");
+    } finally {
+      setImporting(false);
+      setImportProgress("");
+    }
+  };
 
   const save = async (m: any) => {
     try {
