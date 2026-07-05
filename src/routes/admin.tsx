@@ -231,19 +231,28 @@ function MedicinesAdmin() {
 
   return (
     <div className="space-y-4">
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild><Button onClick={() => setEditing({ name: "", name_cyrl: "", image_url: "", price: 0 })} className="gap-1"><Plus className="h-4 w-4" /> Qo'shish</Button></DialogTrigger>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Dori</DialogTitle></DialogHeader>
-          {editing && <div className="space-y-3">
-            <div><Label>Nomi (Lotin)</Label><Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="Masalan: Paratsetamol" /></div>
-            <div><Label>Nomi (Kirill)</Label><Input value={editing.name_cyrl ?? ""} onChange={(e) => setEditing({ ...editing, name_cyrl: e.target.value })} placeholder="Масалан: Парацетамол" /></div>
-            <div><Label>Rasm (URL yoki yuklash)</Label><ImageInput value={editing.image_url ?? ""} onChange={(v) => setEditing({ ...editing, image_url: v })} /></div>
-            <div><Label>Narx (so'm)</Label><Input type="number" value={editing.price} onChange={(e) => setEditing({ ...editing, price: e.target.value })} /></div>
-            <Button onClick={() => save(editing)} className="w-full">Saqlash</Button>
-          </div>}
-        </DialogContent>
-      </Dialog>
+      <div className="flex flex-wrap items-center gap-2">
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild><Button onClick={() => setEditing({ name: "", name_cyrl: "", image_url: "", price: 0 })} className="gap-1"><Plus className="h-4 w-4" /> Qo'shish</Button></DialogTrigger>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
+            <DialogHeader><DialogTitle>Dori</DialogTitle></DialogHeader>
+            {editing && <div className="space-y-3">
+              <div><Label>Nomi (Lotin)</Label><Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="Masalan: Paratsetamol" /></div>
+              <div><Label>Nomi (Kirill)</Label><Input value={editing.name_cyrl ?? ""} onChange={(e) => setEditing({ ...editing, name_cyrl: e.target.value })} placeholder="Масалан: Парацетамол" /></div>
+              <div><Label>Rasm (URL yoki yuklash)</Label><ImageInput value={editing.image_url ?? ""} onChange={(v) => setEditing({ ...editing, image_url: v })} /></div>
+              <div><Label>Narx (so'm)</Label><Input type="number" value={editing.price} onChange={(e) => setEditing({ ...editing, price: e.target.value })} /></div>
+              <Button onClick={() => save(editing)} className="w-full">Saqlash</Button>
+            </div>}
+          </DialogContent>
+        </Dialog>
+        <Label htmlFor="xlsx-upload" className="cursor-pointer">
+          <div className="inline-flex items-center gap-1 h-9 px-4 rounded-md border border-input bg-background hover:bg-accent text-sm font-medium">
+            <Plus className="h-4 w-4" /> {importing ? (importProgress || "Yuklanmoqda...") : ".xlsx dan import"}
+          </div>
+          <input id="xlsx-upload" type="file" accept=".xlsx,.xls" className="hidden" disabled={importing} onChange={handleXlsxImport} />
+        </Label>
+        <span className="text-xs text-muted-foreground">Ustunlar: name, name_cyrl, price, image_url</span>
+      </div>
       <div className="grid md:grid-cols-2 gap-3">
         {data.map((m: any) => (
           <Card key={m.id} className="p-3 flex gap-3">
