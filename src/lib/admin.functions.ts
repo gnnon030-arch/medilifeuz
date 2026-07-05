@@ -113,6 +113,40 @@ export const adminSaveMedicine = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const BulkMedicinesSchema = z.object({
+  items: z.array(z.object({
+    name: z.string().min(1).max(180),
+    name_cyrl: z.string().max(180).nullable().optional(),
+    price: z.number().min(0),
+    image_url: z.string().max(1000).nullable().optional(),
+  })).min(1).max(2000),
+});
+
+export const adminBulkImportMedicines = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => BulkMedicinesSchema.parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const rows = data.items.map((r) => ({
+      name: r.name,
+      name_cyrl: r.name_cyrl || null,
+      description: null,
+      image_url: r.image_url || null,
+      price: r.price,
+      unit: "dona",
+      stock: 0,
+    }));
+    // Insert in chunks of 500
+    let inserted = 0;
+    for (let i = 0; i < rows.length; i += 500) {
+      const chunk = rows.slice(i, i + 500);
+      const { error } = await supabaseAdmin.from("medicines").insert(chunk);
+      if (error) throw new Error(error.message);
+      inserted += chunk.length;
+    }
+    return { inserted };
+  });
+
 export const adminDeleteMedicine = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i) => IdSchema.parse(i))

@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import {
+  adminBulkImportMedicines,
   adminDeleteBranch,
   adminDeleteMedicine,
   adminDeleteNews,
@@ -32,6 +33,7 @@ import {
   adminUpdateUser,
   adminUploadMedia,
 } from "@/lib/admin.functions";
+import * as XLSX from "xlsx";
 
 
 export const Route = createFileRoute("/admin")({
@@ -166,9 +168,59 @@ function MedicinesAdmin() {
   const listFn = useServerFn(adminListMedicines);
   const saveFn = useServerFn(adminSaveMedicine);
   const deleteFn = useServerFn(adminDeleteMedicine);
+  const bulkFn = useServerFn(adminBulkImportMedicines);
   const { data = [], refetch } = useQuery({ queryKey: ["admin-meds"], queryFn: () => listFn({ data: {} }) });
   const [editing, setEditing] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState<string>("");
+
+  const handleXlsxImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setImporting(true);
+    setImportProgress("Fayl o'qilmoqda...");
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<any>(sheet, { defval: "" });
+
+      const norm = (k: string) => k.toString().trim().toLowerCase().replace(/\s+/g, "_");
+      const parsed = rows.map((r) => {
+        const obj: any = {};
+        for (const k of Object.keys(r)) obj[norm(k)] = r[k];
+        const name = String(obj.name ?? obj.nomi ?? obj["nomi_(lotin)"] ?? obj.lotin ?? "").trim();
+        const name_cyrl = String(obj.name_cyrl ?? obj["nomi_(kirill)"] ?? obj.kirill ?? "").trim();
+        const priceRaw = obj.price ?? obj.narx ?? 0;
+        const price = Number(String(priceRaw).replace(/[^0-9.]/g, "")) || 0;
+        const image_url = String(obj.image_url ?? obj.rasm ?? "").trim();
+        return { name, name_cyrl: name_cyrl || null, price, image_url: image_url || null };
+      }).filter((r) => r.name);
+
+      if (parsed.length === 0) {
+        toast.error("Faylda 'name' ustuni bo'lgan qatorlar topilmadi");
+        return;
+      }
+
+      let total = 0;
+      const chunkSize = 500;
+      for (let i = 0; i < parsed.length; i += chunkSize) {
+        const chunk = parsed.slice(i, i + chunkSize);
+        setImportProgress(`Yuklanmoqda: ${i}/${parsed.length}...`);
+        const res = await bulkFn({ data: { items: chunk } });
+        total += res.inserted;
+      }
+      toast.success(`${total} ta dori muvaffaqiyatli yuklandi`);
+      refetch();
+    } catch (err: any) {
+      toast.error(err.message || "Faylni yuklashda xatolik");
+    } finally {
+      setImporting(false);
+      setImportProgress("");
+    }
+  };
 
   const save = async (m: any) => {
     try {
@@ -179,19 +231,28 @@ function MedicinesAdmin() {
 
   return (
     <div className="space-y-4">
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild><Button onClick={() => setEditing({ name: "", name_cyrl: "", image_url: "", price: 0 })} className="gap-1"><Plus className="h-4 w-4" /> Qo'shish</Button></DialogTrigger>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Dori</DialogTitle></DialogHeader>
-          {editing && <div className="space-y-3">
-            <div><Label>Nomi (Lotin)</Label><Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="Masalan: Paratsetamol" /></div>
-            <div><Label>Nomi (Kirill)</Label><Input value={editing.name_cyrl ?? ""} onChange={(e) => setEditing({ ...editing, name_cyrl: e.target.value })} placeholder="Масалан: Парацетамол" /></div>
-            <div><Label>Rasm (URL yoki yuklash)</Label><ImageInput value={editing.image_url ?? ""} onChange={(v) => setEditing({ ...editing, image_url: v })} /></div>
-            <div><Label>Narx (so'm)</Label><Input type="number" value={editing.price} onChange={(e) => setEditing({ ...editing, price: e.target.value })} /></div>
-            <Button onClick={() => save(editing)} className="w-full">Saqlash</Button>
-          </div>}
-        </DialogContent>
-      </Dialog>
+      <div className="flex flex-wrap items-center gap-2">
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild><Button onClick={() => setEditing({ name: "", name_cyrl: "", image_url: "", price: 0 })} className="gap-1"><Plus className="h-4 w-4" /> Qo'shish</Button></DialogTrigger>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
+            <DialogHeader><DialogTitle>Dori</DialogTitle></DialogHeader>
+            {editing && <div className="space-y-3">
+              <div><Label>Nomi (Lotin)</Label><Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="Masalan: Paratsetamol" /></div>
+              <div><Label>Nomi (Kirill)</Label><Input value={editing.name_cyrl ?? ""} onChange={(e) => setEditing({ ...editing, name_cyrl: e.target.value })} placeholder="Масалан: Парацетамол" /></div>
+              <div><Label>Rasm (URL yoki yuklash)</Label><ImageInput value={editing.image_url ?? ""} onChange={(v) => setEditing({ ...editing, image_url: v })} /></div>
+              <div><Label>Narx (so'm)</Label><Input type="number" value={editing.price} onChange={(e) => setEditing({ ...editing, price: e.target.value })} /></div>
+              <Button onClick={() => save(editing)} className="w-full">Saqlash</Button>
+            </div>}
+          </DialogContent>
+        </Dialog>
+        <Label htmlFor="xlsx-upload" className="cursor-pointer">
+          <div className="inline-flex items-center gap-1 h-9 px-4 rounded-md border border-input bg-background hover:bg-accent text-sm font-medium">
+            <Plus className="h-4 w-4" /> {importing ? (importProgress || "Yuklanmoqda...") : ".xlsx dan import"}
+          </div>
+          <input id="xlsx-upload" type="file" accept=".xlsx,.xls" className="hidden" disabled={importing} onChange={handleXlsxImport} />
+        </Label>
+        <span className="text-xs text-muted-foreground">Ustunlar: name, name_cyrl, price, image_url</span>
+      </div>
       <div className="grid md:grid-cols-2 gap-3">
         {data.map((m: any) => (
           <Card key={m.id} className="p-3 flex gap-3">
