@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import {
+  adminBulkImportMedicines,
   adminDeleteBranch,
   adminDeleteMedicine,
   adminDeleteNews,
@@ -32,6 +33,7 @@ import {
   adminUpdateUser,
   adminUploadMedia,
 } from "@/lib/admin.functions";
+import * as XLSX from "xlsx";
 
 
 export const Route = createFileRoute("/admin")({
