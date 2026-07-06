@@ -229,6 +229,18 @@ function MedicinesAdmin() {
     } catch { toast.error("Saqlashda xatolik. Qayta urinib ko'ring."); }
   };
 
+  const exportXlsx = (lang: "latin" | "cyrillic") => {
+    const rows = data.map((m: any) => ({
+      name: lang === "latin" ? m.name : (m.name_cyrl || m.name),
+      price: Number(m.price) || 0,
+      image_url: m.image_url || "",
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, lang === "latin" ? "Dorilar" : "Дорилар");
+    XLSX.writeFile(wb, lang === "latin" ? "dorilar-lotin.xlsx" : "dorilar-kirill.xlsx");
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -251,7 +263,9 @@ function MedicinesAdmin() {
           </div>
           <input id="xlsx-upload" type="file" accept=".xlsx,.xls" className="hidden" disabled={importing} onChange={handleXlsxImport} />
         </Label>
-        <span className="text-xs text-muted-foreground">Ustunlar: name, name_cyrl, price, image_url</span>
+        <Button variant="outline" size="sm" onClick={() => exportXlsx("latin")} disabled={!data.length}>⬇ Lotin (.xlsx)</Button>
+        <Button variant="outline" size="sm" onClick={() => exportXlsx("cyrillic")} disabled={!data.length}>⬇ Kirill (.xlsx)</Button>
+        <span className="text-xs text-muted-foreground w-full">Import ustunlari: <b>name</b> (Lotin), <b>name_cyrl</b> (Kirill), <b>price</b> (narx), <b>image_url</b> (rasm)</span>
       </div>
       <div className="grid md:grid-cols-2 gap-3">
         {data.map((m: any) => (
