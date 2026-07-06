@@ -170,6 +170,7 @@ function MedicinesAdmin() {
   const saveFn = useServerFn(adminSaveMedicine);
   const deleteFn = useServerFn(adminDeleteMedicine);
   const bulkFn = useServerFn(adminBulkImportMedicines);
+  const deleteAllFn = useServerFn(adminDeleteAllMedicines);
   const { data = [], refetch } = useQuery({ queryKey: ["admin-meds"], queryFn: () => listFn({ data: {} }) });
   const [editing, setEditing] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
