@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/hooks/use-auth";
 import {
   adminBulkImportMedicines,
+  adminDeleteAllMedicines,
   adminDeleteBranch,
   adminDeleteMedicine,
   adminDeleteNews,
@@ -169,6 +170,7 @@ function MedicinesAdmin() {
   const saveFn = useServerFn(adminSaveMedicine);
   const deleteFn = useServerFn(adminDeleteMedicine);
   const bulkFn = useServerFn(adminBulkImportMedicines);
+  const deleteAllFn = useServerFn(adminDeleteAllMedicines);
   const { data = [], refetch } = useQuery({ queryKey: ["admin-meds"], queryFn: () => listFn({ data: {} }) });
   const [editing, setEditing] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
@@ -265,6 +267,17 @@ function MedicinesAdmin() {
         </Label>
         <Button variant="outline" size="sm" onClick={() => exportXlsx("latin")} disabled={!data.length}>⬇ Lotin (.xlsx)</Button>
         <Button variant="outline" size="sm" onClick={() => exportXlsx("cyrillic")} disabled={!data.length}>⬇ Kirill (.xlsx)</Button>
+        <Button variant="destructive" size="sm" disabled={!data.length || importing} onClick={async () => {
+          if (!confirm(`DIQQAT: Barcha ${data.length} ta dori o'chiriladi. Davom etilsinmi?`)) return;
+          if (!confirm("Rostdan ham hamma dorilarni o'chirmoqchimisiz? Bu amalni qaytarib bo'lmaydi.")) return;
+          try {
+            const res = await deleteAllFn({ data: {} });
+            toast.success(`${res.deleted} ta dori o'chirildi`);
+            refetch();
+          } catch (err: any) {
+            toast.error(err.message || "O'chirishda xatolik");
+          }
+        }} className="gap-1"><Trash2 className="h-4 w-4" /> Hammasini o'chirish</Button>
         <span className="text-xs text-muted-foreground w-full">Import ustunlari: <b>name</b> (Lotin), <b>name_cyrl</b> (Kirill), <b>price</b> (narx), <b>image_url</b> (rasm)</span>
       </div>
       <div className="grid md:grid-cols-2 gap-3">

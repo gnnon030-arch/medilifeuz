@@ -157,6 +157,19 @@ export const adminDeleteMedicine = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const adminDeleteAllMedicines = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => (i ?? {}))
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { error, count } = await supabaseAdmin
+      .from("medicines")
+      .delete({ count: "exact" })
+      .not("id", "is", null);
+    if (error) throw new Error(error.message);
+    return { deleted: count ?? 0 };
+  });
+
 const BranchSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().min(1).max(180),
