@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/hooks/use-auth";
 import {
   adminBulkImportMedicines,
+  adminDeleteAllMedicines,
   adminDeleteBranch,
   adminDeleteMedicine,
   adminDeleteNews,
