@@ -176,6 +176,7 @@ function MedicinesAdmin() {
   const [open, setOpen] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState<string>("");
+  const [search, setSearch] = useState("");
 
   const handleXlsxImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
