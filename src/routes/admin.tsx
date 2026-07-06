@@ -266,8 +266,8 @@ function MedicinesAdmin() {
           </div>
           <input id="xlsx-upload" type="file" accept=".xlsx,.xls" className="hidden" disabled={importing} onChange={handleXlsxImport} />
         </Label>
-        <Button variant="outline" size="sm" onClick={() => exportXlsx("latin")} disabled={!data.length}>⬇ Lotin (.xlsx)</Button>
-        <Button variant="outline" size="sm" onClick={() => exportXlsx("cyrillic")} disabled={!data.length}>⬇ Kirill (.xlsx)</Button>
+        <Button variant="outline" size="sm" onClick={() => exportXlsx("latin")}>⬇ Lotin (.xlsx)</Button>
+        <Button variant="outline" size="sm" onClick={() => exportXlsx("cyrillic")}>⬇ Kirill (.xlsx)</Button>
         <Button variant="destructive" size="sm" disabled={!data.length || importing} onClick={async () => {
           if (!confirm(`DIQQAT: Barcha ${data.length} ta dori o'chiriladi. Davom etilsinmi?`)) return;
           if (!confirm("Rostdan ham hamma dorilarni o'chirmoqchimisiz? Bu amalni qaytarib bo'lmaydi.")) return;
@@ -281,8 +281,14 @@ function MedicinesAdmin() {
         }} className="gap-1"><Trash2 className="h-4 w-4" /> Hammasini o'chirish</Button>
         <span className="text-xs text-muted-foreground w-full">Import ustunlari: <b>name</b> (Lotin), <b>name_cyrl</b> (Kirill), <b>price</b> (narx), <b>image_url</b> (rasm)</span>
       </div>
+      <Input placeholder="Qidirish (nomi bo'yicha)..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
+      <div className="text-xs text-muted-foreground">Jami: {data.length} ta dori{search && ` · Topildi: ${data.filter((m: any) => { const s = search.toLowerCase(); return m.name?.toLowerCase().includes(s) || m.name_cyrl?.toLowerCase().includes(s); }).length}`}</div>
       <div className="grid md:grid-cols-2 gap-3">
-        {data.map((m: any) => (
+        {data.filter((m: any) => {
+          if (!search) return true;
+          const s = search.toLowerCase();
+          return m.name?.toLowerCase().includes(s) || m.name_cyrl?.toLowerCase().includes(s);
+        }).map((m: any) => (
           <Card key={m.id} className="p-3 flex gap-3">
             {m.image_url && <img src={m.image_url} alt="" className="h-16 w-16 object-cover rounded" />}
             <div className="flex-1 min-w-0">
@@ -296,6 +302,7 @@ function MedicinesAdmin() {
           </Card>
         ))}
       </div>
+
     </div>
   );
 }
