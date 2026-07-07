@@ -46,7 +46,24 @@ export function MedicineCard({ m }: { m: Medicine }) {
     <Card className="overflow-hidden flex flex-col group hover:shadow-lg transition-shadow">
       <div className="aspect-square bg-muted overflow-hidden">
         {m.image_url ? (
-          <img src={m.image_url} alt={displayName} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+          <img
+            src={m.image_url}
+            alt={displayName}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+            onError={(e) => {
+              const el = e.currentTarget;
+              el.style.display = "none";
+              const parent = el.parentElement;
+              if (parent && !parent.querySelector(".img-fallback")) {
+                const div = document.createElement("div");
+                div.className = "img-fallback w-full h-full flex items-center justify-center text-muted-foreground text-sm";
+                div.textContent = "No image";
+                parent.appendChild(div);
+              }
+            }}
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">No image</div>
         )}
