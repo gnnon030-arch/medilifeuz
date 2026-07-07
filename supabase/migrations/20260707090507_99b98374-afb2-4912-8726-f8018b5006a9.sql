@@ -1,0 +1,2 @@
+ALTER TABLE public.medicines ADD COLUMN IF NOT EXISTS language TEXT NOT NULL DEFAULT 'latin' CHECK (language IN ('latin','cyrillic'));
+CREATE INDEX IF NOT EXISTS medicines_language_idx ON public.medicines(language);
