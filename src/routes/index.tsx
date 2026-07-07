@@ -66,7 +66,8 @@ function NewsCarousel({ items }: { items: News[] }) {
 }
 
 function Home() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang: "latin" | "cyrillic" = i18n.language === "uz_cyrl" ? "cyrillic" : "latin";
 
   const { data: news = [], isLoading: newsLoading } = useQuery({
     queryKey: ["news-home"],
