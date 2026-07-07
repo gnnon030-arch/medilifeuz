@@ -162,13 +162,12 @@ export const adminDeleteMedicine = createServerFn({ method: "POST" })
 
 export const adminDeleteAllMedicines = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i) => (i ?? {}))
-  .handler(async ({ context }) => {
+  .inputValidator((i: any) => ({ language: i?.language as "latin" | "cyrillic" | undefined }))
+  .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
-    const { error, count } = await supabaseAdmin
-      .from("medicines")
-      .delete({ count: "exact" })
-      .not("id", "is", null);
+    let q = supabaseAdmin.from("medicines").delete({ count: "exact" }).not("id", "is", null);
+    if (data.language) q = q.eq("language", data.language);
+    const { error, count } = await q;
     if (error) throw new Error(error.message);
     return { deleted: count ?? 0 };
   });
