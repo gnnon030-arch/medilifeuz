@@ -249,14 +249,19 @@ function MedicinesAdmin() {
             </div>}
           </DialogContent>
         </Dialog>
-        <Label htmlFor="xlsx-upload" className="cursor-pointer">
-          <div className="inline-flex items-center gap-1 h-9 px-4 rounded-md border border-input bg-background hover:bg-accent text-sm font-medium">
-            <Plus className="h-4 w-4" /> {importing ? (importProgress || "Yuklanmoqda...") : ".xlsx dan import"}
+        <Label htmlFor="xlsx-latin" className="cursor-pointer">
+          <div className={`inline-flex items-center gap-1 h-9 px-4 rounded-md border border-input bg-background hover:bg-accent text-sm font-medium ${importing ? "opacity-50 pointer-events-none" : ""}`}>
+            <Plus className="h-4 w-4" /> Lotin import (.xlsx)
           </div>
-          <input id="xlsx-upload" type="file" accept=".xlsx,.xls" className="hidden" disabled={importing} onChange={handleXlsxImport} />
+          <input id="xlsx-latin" type="file" accept=".xlsx,.xls" className="hidden" disabled={importing} onChange={(e) => handleXlsxImport(e, "latin")} />
         </Label>
-        <Button variant="outline" size="sm" onClick={() => exportXlsx("latin")}>⬇ Lotin (.xlsx)</Button>
-        <Button variant="outline" size="sm" onClick={() => exportXlsx("cyrillic")}>⬇ Kirill (.xlsx)</Button>
+        <Label htmlFor="xlsx-cyrl" className="cursor-pointer">
+          <div className={`inline-flex items-center gap-1 h-9 px-4 rounded-md border border-input bg-background hover:bg-accent text-sm font-medium ${importing ? "opacity-50 pointer-events-none" : ""}`}>
+            <Plus className="h-4 w-4" /> Kirill import (.xlsx)
+          </div>
+          <input id="xlsx-cyrl" type="file" accept=".xlsx,.xls" className="hidden" disabled={importing} onChange={(e) => handleXlsxImport(e, "cyrillic")} />
+        </Label>
+        {importing && <span className="text-xs text-muted-foreground">{importProgress}</span>}
         <Button variant="destructive" size="sm" disabled={!data.length || importing} onClick={async () => {
           if (!confirm(`DIQQAT: Barcha ${data.length} ta dori o'chiriladi. Davom etilsinmi?`)) return;
           if (!confirm("Rostdan ham hamma dorilarni o'chirmoqchimisiz? Bu amalni qaytarib bo'lmaydi.")) return;
