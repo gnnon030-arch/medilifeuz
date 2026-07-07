@@ -166,19 +166,33 @@ function NewsAdmin() {
 
 /* ---------------- MEDICINES ---------------- */
 function MedicinesAdmin() {
+  return (
+    <Tabs defaultValue="latin">
+      <TabsList>
+        <TabsTrigger value="latin">Lotin dorilar</TabsTrigger>
+        <TabsTrigger value="cyrillic">Kirill dorilar</TabsTrigger>
+      </TabsList>
+      <TabsContent value="latin" className="mt-4"><MedicinesByLang lang="latin" /></TabsContent>
+      <TabsContent value="cyrillic" className="mt-4"><MedicinesByLang lang="cyrillic" /></TabsContent>
+    </Tabs>
+  );
+}
+
+function MedicinesByLang({ lang }: { lang: "latin" | "cyrillic" }) {
   const listFn = useServerFn(adminListMedicines);
   const saveFn = useServerFn(adminSaveMedicine);
   const deleteFn = useServerFn(adminDeleteMedicine);
   const bulkFn = useServerFn(adminBulkImportMedicines);
   const deleteAllFn = useServerFn(adminDeleteAllMedicines);
-  const { data = [], refetch } = useQuery({ queryKey: ["admin-meds"], queryFn: () => listFn({ data: {} }) });
+  const { data: allData = [], refetch } = useQuery({ queryKey: ["admin-meds"], queryFn: () => listFn({ data: {} }) });
+  const data = (allData as any[]).filter((m) => (m.language ?? "latin") === lang);
   const [editing, setEditing] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState<string>("");
   const [search, setSearch] = useState("");
 
-  const handleXlsxImport = async (e: React.ChangeEvent<HTMLInputElement>, lang: "latin" | "cyrillic") => {
+  const handleXlsxImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
@@ -213,7 +227,7 @@ function MedicinesAdmin() {
       for (let i = 0; i < parsed.length; i += chunkSize) {
         const chunk = parsed.slice(i, i + chunkSize);
         setImportProgress(`Yuklanmoqda: ${i}/${parsed.length}...`);
-        const res = await bulkFn({ data: { items: chunk } });
+        const res = await bulkFn({ data: { language: lang, items: chunk } });
         total += res.inserted;
       }
       toast.success(`${total} ta dori muvaffaqiyatli yuklandi`);
@@ -228,10 +242,13 @@ function MedicinesAdmin() {
 
   const save = async (m: any) => {
     try {
-      await saveFn({ data: { id: m.id, name: m.name, name_cyrl: m.name_cyrl || null, description: null, image_url: m.image_url || null, price: Number(m.price) || 0, unit: "dona", stock: 0 } });
+      await saveFn({ data: { id: m.id, name: m.name, name_cyrl: m.name_cyrl || null, description: null, image_url: m.image_url || null, price: Number(m.price) || 0, unit: "dona", stock: 0, language: lang } });
       toast.success("Saqlandi"); setOpen(false); refetch();
     } catch { toast.error("Saqlashda xatolik. Qayta urinib ko'ring."); }
   };
+
+  const label = lang === "latin" ? "Lotin" : "Kirill";
+  const importId = `xlsx-${lang}`;
 
   return (
     <div className="space-y-4">
@@ -239,44 +256,37 @@ function MedicinesAdmin() {
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild><Button onClick={() => setEditing({ name: "", name_cyrl: "", image_url: "", price: 0 })} className="gap-1"><Plus className="h-4 w-4" /> Qo'shish</Button></DialogTrigger>
           <DialogContent className="max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Dori</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>Dori ({label})</DialogTitle></DialogHeader>
             {editing && <div className="space-y-3">
-              <div><Label>Nomi (Lotin)</Label><Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="Masalan: Paratsetamol" /></div>
-              <div><Label>Nomi (Kirill)</Label><Input value={editing.name_cyrl ?? ""} onChange={(e) => setEditing({ ...editing, name_cyrl: e.target.value })} placeholder="Масалан: Парацетамол" /></div>
+              <div><Label>Nomi ({label})</Label><Input value={lang === "latin" ? editing.name : (editing.name_cyrl ?? "")} onChange={(e) => setEditing(lang === "latin" ? { ...editing, name: e.target.value } : { ...editing, name: e.target.value, name_cyrl: e.target.value })} placeholder={lang === "latin" ? "Masalan: Paratsetamol" : "Масалан: Парацетамол"} /></div>
               <div><Label>Rasm (URL yoki yuklash)</Label><ImageInput value={editing.image_url ?? ""} onChange={(v) => setEditing({ ...editing, image_url: v })} /></div>
               <div><Label>Narx (so'm)</Label><Input type="number" value={editing.price} onChange={(e) => setEditing({ ...editing, price: e.target.value })} /></div>
               <Button onClick={() => save(editing)} className="w-full">Saqlash</Button>
             </div>}
           </DialogContent>
         </Dialog>
-        <Label htmlFor="xlsx-latin" className="cursor-pointer">
+        <Label htmlFor={importId} className="cursor-pointer">
           <div className={`inline-flex items-center gap-1 h-9 px-4 rounded-md border border-input bg-background hover:bg-accent text-sm font-medium ${importing ? "opacity-50 pointer-events-none" : ""}`}>
-            <Plus className="h-4 w-4" /> Lotin import (.xlsx)
+            <Plus className="h-4 w-4" /> {label} import (.xlsx)
           </div>
-          <input id="xlsx-latin" type="file" accept=".xlsx,.xls" className="hidden" disabled={importing} onChange={(e) => handleXlsxImport(e, "latin")} />
-        </Label>
-        <Label htmlFor="xlsx-cyrl" className="cursor-pointer">
-          <div className={`inline-flex items-center gap-1 h-9 px-4 rounded-md border border-input bg-background hover:bg-accent text-sm font-medium ${importing ? "opacity-50 pointer-events-none" : ""}`}>
-            <Plus className="h-4 w-4" /> Kirill import (.xlsx)
-          </div>
-          <input id="xlsx-cyrl" type="file" accept=".xlsx,.xls" className="hidden" disabled={importing} onChange={(e) => handleXlsxImport(e, "cyrillic")} />
+          <input id={importId} type="file" accept=".xlsx,.xls" className="hidden" disabled={importing} onChange={handleXlsxImport} />
         </Label>
         {importing && <span className="text-xs text-muted-foreground">{importProgress}</span>}
         <Button variant="destructive" size="sm" disabled={!data.length || importing} onClick={async () => {
-          if (!confirm(`DIQQAT: Barcha ${data.length} ta dori o'chiriladi. Davom etilsinmi?`)) return;
-          if (!confirm("Rostdan ham hamma dorilarni o'chirmoqchimisiz? Bu amalni qaytarib bo'lmaydi.")) return;
+          if (!confirm(`DIQQAT: Barcha ${data.length} ta ${label} dorilar o'chiriladi. Davom etilsinmi?`)) return;
+          if (!confirm("Rostdan ham o'chirmoqchimisiz? Bu amalni qaytarib bo'lmaydi.")) return;
           try {
-            const res = await deleteAllFn({ data: {} });
+            const res = await deleteAllFn({ data: { language: lang } });
             toast.success(`${res.deleted} ta dori o'chirildi`);
             refetch();
           } catch (err: any) {
             toast.error(err.message || "O'chirishda xatolik");
           }
         }} className="gap-1"><Trash2 className="h-4 w-4" /> Hammasini o'chirish</Button>
-        <span className="text-xs text-muted-foreground w-full">Import ustunlari: <b>name</b> (Lotin), <b>name_cyrl</b> (Kirill), <b>price</b> (narx), <b>image_url</b> (rasm)</span>
+        <span className="text-xs text-muted-foreground w-full">Import ustunlari: <b>name</b> (nomi), <b>price</b> (narx), <b>image_url</b> (rasm)</span>
       </div>
       <Input placeholder="Qidirish (nomi bo'yicha)..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
-      <div className="text-xs text-muted-foreground">Jami: {data.length} ta dori{search && ` · Topildi: ${data.filter((m: any) => { const s = search.toLowerCase(); return m.name?.toLowerCase().includes(s) || m.name_cyrl?.toLowerCase().includes(s); }).length}`}</div>
+      <div className="text-xs text-muted-foreground">Jami: {data.length} ta {label} dori{search && ` · Topildi: ${data.filter((m: any) => { const s = search.toLowerCase(); return m.name?.toLowerCase().includes(s) || m.name_cyrl?.toLowerCase().includes(s); }).length}`}</div>
       <div className="grid md:grid-cols-2 gap-3">
         {data.filter((m: any) => {
           if (!search) return true;
@@ -286,7 +296,7 @@ function MedicinesAdmin() {
           <Card key={m.id} className="p-3 flex gap-3">
             {m.image_url && <img src={m.image_url} alt="" className="h-16 w-16 object-cover rounded" />}
             <div className="flex-1 min-w-0">
-              <h3 className="font-medium truncate">{m.name}</h3>
+              <h3 className="font-medium truncate">{lang === "cyrillic" ? (m.name_cyrl || m.name) : m.name}</h3>
               <p className="text-xs text-muted-foreground">{Number(m.price).toLocaleString()} so'm</p>
             </div>
             <div className="flex flex-col gap-1">
@@ -296,7 +306,6 @@ function MedicinesAdmin() {
           </Card>
         ))}
       </div>
-
     </div>
   );
 }
