@@ -66,7 +66,8 @@ function NewsCarousel({ items }: { items: News[] }) {
 }
 
 function Home() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang: "latin" | "cyrillic" = i18n.language === "uz_cyrl" ? "cyrillic" : "latin";
 
   const { data: news = [], isLoading: newsLoading } = useQuery({
     queryKey: ["news-home"],
@@ -77,9 +78,9 @@ function Home() {
   });
 
   const { data: medicines = [], isLoading: medsLoading } = useQuery({
-    queryKey: ["medicines-home"],
+    queryKey: ["medicines-home", currentLang],
     queryFn: async () => {
-      const { data } = await supabase.from("medicines").select("*").order("created_at", { ascending: false }).limit(8);
+      const { data } = await supabase.from("medicines").select("*").eq("language", currentLang).order("created_at", { ascending: false }).limit(8);
       return (data ?? []) as Medicine[];
     },
   });

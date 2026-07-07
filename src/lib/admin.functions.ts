@@ -89,6 +89,7 @@ const MedicineSchema = z.object({
   price: z.number().min(0),
   unit: z.string().min(1).max(80),
   stock: z.number().int().min(0),
+  language: z.enum(["latin", "cyrillic"]).optional(),
 });
 
 export const adminListMedicines = createServerFn({ method: "POST" })
@@ -106,7 +107,8 @@ export const adminSaveMedicine = createServerFn({ method: "POST" })
   .inputValidator((i) => MedicineSchema.parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
-    const payload = { name: data.name, name_cyrl: data.name_cyrl || null, description: data.description ?? null, image_url: data.image_url || null, price: data.price, unit: data.unit, stock: data.stock };
+    const payload: any = { name: data.name, name_cyrl: data.name_cyrl || null, description: data.description ?? null, image_url: data.image_url || null, price: data.price, unit: data.unit, stock: data.stock };
+    if (data.language) payload.language = data.language;
     const query = data.id ? supabaseAdmin.from("medicines").update(payload).eq("id", data.id) : supabaseAdmin.from("medicines").insert(payload);
     const { error } = await query;
     if (error) throw new Error(error.message);
@@ -114,6 +116,7 @@ export const adminSaveMedicine = createServerFn({ method: "POST" })
   });
 
 const BulkMedicinesSchema = z.object({
+  language: z.enum(["latin", "cyrillic"]),
   items: z.array(z.object({
     name: z.string().min(1).max(180),
     name_cyrl: z.string().max(180).nullable().optional(),
@@ -135,8 +138,8 @@ export const adminBulkImportMedicines = createServerFn({ method: "POST" })
       price: r.price,
       unit: "dona",
       stock: 0,
+      language: data.language,
     }));
-    // Insert in chunks of 500
     let inserted = 0;
     for (let i = 0; i < rows.length; i += 500) {
       const chunk = rows.slice(i, i + 500);
@@ -159,13 +162,12 @@ export const adminDeleteMedicine = createServerFn({ method: "POST" })
 
 export const adminDeleteAllMedicines = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i) => (i ?? {}))
-  .handler(async ({ context }) => {
+  .inputValidator((i: any) => ({ language: i?.language as "latin" | "cyrillic" | undefined }))
+  .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
-    const { error, count } = await supabaseAdmin
-      .from("medicines")
-      .delete({ count: "exact" })
-      .not("id", "is", null);
+    let q = supabaseAdmin.from("medicines").delete({ count: "exact" }).not("id", "is", null);
+    if (data.language) q = q.eq("language", data.language);
+    const { error, count } = await q;
     if (error) throw new Error(error.message);
     return { deleted: count ?? 0 };
   });

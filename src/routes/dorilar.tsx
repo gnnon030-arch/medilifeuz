@@ -19,10 +19,12 @@ function MedicinesPage() {
   const [maxPrice, setMaxPrice] = useState<string>("");
   const [sort, setSort] = useState<"az" | "za" | "price-asc" | "price-desc">("az");
 
+  const currentLang: "latin" | "cyrillic" = i18n.language === "uz_cyrl" ? "cyrillic" : "latin";
+
   const { data = [], isLoading } = useQuery({
-    queryKey: ["medicines-all"],
+    queryKey: ["medicines-all", currentLang],
     queryFn: async () => {
-      const { data } = await supabase.from("medicines").select("*").order("created_at", { ascending: false });
+      const { data } = await supabase.from("medicines").select("*").eq("language", currentLang).order("created_at", { ascending: false });
       return (data ?? []) as Medicine[];
     },
   });
