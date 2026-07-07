@@ -178,7 +178,7 @@ function MedicinesAdmin() {
   const [importProgress, setImportProgress] = useState<string>("");
   const [search, setSearch] = useState("");
 
-  const handleXlsxImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleXlsxImport = async (e: React.ChangeEvent<HTMLInputElement>, lang: "latin" | "cyrillic") => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
@@ -194,12 +194,13 @@ function MedicinesAdmin() {
       const parsed = rows.map((r) => {
         const obj: any = {};
         for (const k of Object.keys(r)) obj[norm(k)] = r[k];
-        const name = String(obj.name ?? obj.nomi ?? obj["nomi_(lotin)"] ?? obj.lotin ?? "").trim();
-        const name_cyrl = String(obj.name_cyrl ?? obj["nomi_(kirill)"] ?? obj.kirill ?? "").trim();
+        const nameVal = String(obj.name ?? obj.nomi ?? obj["nomi_(lotin)"] ?? obj["nomi_(kirill)"] ?? obj.lotin ?? obj.kirill ?? "").trim();
         const priceRaw = obj.price ?? obj.narx ?? 0;
         const price = Number(String(priceRaw).replace(/[^0-9.]/g, "")) || 0;
         const image_url = String(obj.image_url ?? obj.rasm ?? "").trim();
-        return { name, name_cyrl: name_cyrl || null, price, image_url: image_url || null };
+        return lang === "latin"
+          ? { name: nameVal, name_cyrl: null, price, image_url: image_url || null }
+          : { name: nameVal, name_cyrl: nameVal, price, image_url: image_url || null };
       }).filter((r) => r.name);
 
       if (parsed.length === 0) {
@@ -230,18 +231,6 @@ function MedicinesAdmin() {
       await saveFn({ data: { id: m.id, name: m.name, name_cyrl: m.name_cyrl || null, description: null, image_url: m.image_url || null, price: Number(m.price) || 0, unit: "dona", stock: 0 } });
       toast.success("Saqlandi"); setOpen(false); refetch();
     } catch { toast.error("Saqlashda xatolik. Qayta urinib ko'ring."); }
-  };
-
-  const exportXlsx = (lang: "latin" | "cyrillic") => {
-    const rows = data.map((m: any) => ({
-      name: lang === "latin" ? m.name : (m.name_cyrl || m.name),
-      price: Number(m.price) || 0,
-      image_url: m.image_url || "",
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, lang === "latin" ? "Dorilar" : "Дорилар");
-    XLSX.writeFile(wb, lang === "latin" ? "dorilar-lotin.xlsx" : "dorilar-kirill.xlsx");
   };
 
   return (
