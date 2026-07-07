@@ -89,6 +89,7 @@ const MedicineSchema = z.object({
   price: z.number().min(0),
   unit: z.string().min(1).max(80),
   stock: z.number().int().min(0),
+  language: z.enum(["latin", "cyrillic"]).optional(),
 });
 
 export const adminListMedicines = createServerFn({ method: "POST" })
