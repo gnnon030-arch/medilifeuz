@@ -178,7 +178,7 @@ function MedicinesAdmin() {
   const [importProgress, setImportProgress] = useState<string>("");
   const [search, setSearch] = useState("");
 
-  const handleXlsxImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleXlsxImport = async (e: React.ChangeEvent<HTMLInputElement>, lang: "latin" | "cyrillic") => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
@@ -194,12 +194,13 @@ function MedicinesAdmin() {
       const parsed = rows.map((r) => {
         const obj: any = {};
         for (const k of Object.keys(r)) obj[norm(k)] = r[k];
-        const name = String(obj.name ?? obj.nomi ?? obj["nomi_(lotin)"] ?? obj.lotin ?? "").trim();
-        const name_cyrl = String(obj.name_cyrl ?? obj["nomi_(kirill)"] ?? obj.kirill ?? "").trim();
+        const nameVal = String(obj.name ?? obj.nomi ?? obj["nomi_(lotin)"] ?? obj["nomi_(kirill)"] ?? obj.lotin ?? obj.kirill ?? "").trim();
         const priceRaw = obj.price ?? obj.narx ?? 0;
         const price = Number(String(priceRaw).replace(/[^0-9.]/g, "")) || 0;
         const image_url = String(obj.image_url ?? obj.rasm ?? "").trim();
-        return { name, name_cyrl: name_cyrl || null, price, image_url: image_url || null };
+        return lang === "latin"
+          ? { name: nameVal, name_cyrl: null, price, image_url: image_url || null }
+          : { name: nameVal, name_cyrl: nameVal, price, image_url: image_url || null };
       }).filter((r) => r.name);
 
       if (parsed.length === 0) {
@@ -232,18 +233,6 @@ function MedicinesAdmin() {
     } catch { toast.error("Saqlashda xatolik. Qayta urinib ko'ring."); }
   };
 
-  const exportXlsx = (lang: "latin" | "cyrillic") => {
-    const rows = data.map((m: any) => ({
-      name: lang === "latin" ? m.name : (m.name_cyrl || m.name),
-      price: Number(m.price) || 0,
-      image_url: m.image_url || "",
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, lang === "latin" ? "Dorilar" : "Дорилар");
-    XLSX.writeFile(wb, lang === "latin" ? "dorilar-lotin.xlsx" : "dorilar-kirill.xlsx");
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -260,14 +249,19 @@ function MedicinesAdmin() {
             </div>}
           </DialogContent>
         </Dialog>
-        <Label htmlFor="xlsx-upload" className="cursor-pointer">
-          <div className="inline-flex items-center gap-1 h-9 px-4 rounded-md border border-input bg-background hover:bg-accent text-sm font-medium">
-            <Plus className="h-4 w-4" /> {importing ? (importProgress || "Yuklanmoqda...") : ".xlsx dan import"}
+        <Label htmlFor="xlsx-latin" className="cursor-pointer">
+          <div className={`inline-flex items-center gap-1 h-9 px-4 rounded-md border border-input bg-background hover:bg-accent text-sm font-medium ${importing ? "opacity-50 pointer-events-none" : ""}`}>
+            <Plus className="h-4 w-4" /> Lotin import (.xlsx)
           </div>
-          <input id="xlsx-upload" type="file" accept=".xlsx,.xls" className="hidden" disabled={importing} onChange={handleXlsxImport} />
+          <input id="xlsx-latin" type="file" accept=".xlsx,.xls" className="hidden" disabled={importing} onChange={(e) => handleXlsxImport(e, "latin")} />
         </Label>
-        <Button variant="outline" size="sm" onClick={() => exportXlsx("latin")}>⬇ Lotin (.xlsx)</Button>
-        <Button variant="outline" size="sm" onClick={() => exportXlsx("cyrillic")}>⬇ Kirill (.xlsx)</Button>
+        <Label htmlFor="xlsx-cyrl" className="cursor-pointer">
+          <div className={`inline-flex items-center gap-1 h-9 px-4 rounded-md border border-input bg-background hover:bg-accent text-sm font-medium ${importing ? "opacity-50 pointer-events-none" : ""}`}>
+            <Plus className="h-4 w-4" /> Kirill import (.xlsx)
+          </div>
+          <input id="xlsx-cyrl" type="file" accept=".xlsx,.xls" className="hidden" disabled={importing} onChange={(e) => handleXlsxImport(e, "cyrillic")} />
+        </Label>
+        {importing && <span className="text-xs text-muted-foreground">{importProgress}</span>}
         <Button variant="destructive" size="sm" disabled={!data.length || importing} onClick={async () => {
           if (!confirm(`DIQQAT: Barcha ${data.length} ta dori o'chiriladi. Davom etilsinmi?`)) return;
           if (!confirm("Rostdan ham hamma dorilarni o'chirmoqchimisiz? Bu amalni qaytarib bo'lmaydi.")) return;
