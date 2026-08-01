@@ -97,10 +97,21 @@ export const adminListMedicines = createServerFn({ method: "POST" })
   .inputValidator((i) => (i ?? {}))
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
-    const { data: rows, error } = await supabaseAdmin.from("medicines").select("*").order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
-    return rows ?? [];
+    const out: any[] = [];
+    const size = 1000;
+    for (let from = 0; ; from += size) {
+      const { data: rows, error } = await supabaseAdmin
+        .from("medicines")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .range(from, from + size - 1);
+      if (error) throw new Error(error.message);
+      out.push(...(rows ?? []));
+      if (!rows || rows.length < size) break;
+    }
+    return out;
   });
+
 
 export const adminSaveMedicine = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
