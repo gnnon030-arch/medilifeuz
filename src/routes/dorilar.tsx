@@ -24,11 +24,25 @@ function MedicinesPage() {
 
   const { data: all = [], isLoading } = useQuery({
     queryKey: ["medicines-all"],
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      const { data } = await supabase.from("medicines").select("*").order("created_at", { ascending: false });
-      return (data ?? []) as Medicine[];
+      // PostgREST bir so'rovda 1000 qatordan ko'p bermaydi — hammasini sahifalab olamiz
+      const out: Medicine[] = [];
+      const size = 1000;
+      for (let from = 0; ; from += size) {
+        const { data, error } = await supabase
+          .from("medicines")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .range(from, from + size - 1);
+        if (error) break;
+        out.push(...((data ?? []) as Medicine[]));
+        if (!data || data.length < size) break;
+      }
+      return out;
     },
   });
+
 
   // Tanlangan tildagi dorilar; agar o'sha tilda hech narsa bo'lmasa — hammasi ko'rsatiladi
   const data = useMemo(() => {
