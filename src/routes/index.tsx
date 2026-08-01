@@ -81,9 +81,13 @@ function Home() {
     queryKey: ["medicines-home", currentLang],
     queryFn: async () => {
       const { data } = await supabase.from("medicines").select("*").eq("language", currentLang).order("created_at", { ascending: false }).limit(8);
-      return (data ?? []) as Medicine[];
+      if (data && data.length) return data as Medicine[];
+      // Agar tanlangan tilda dori bo'lmasa — mavjud dorilarni ko'rsatamiz
+      const { data: fallback } = await supabase.from("medicines").select("*").order("created_at", { ascending: false }).limit(8);
+      return (fallback ?? []) as Medicine[];
     },
   });
+
 
   return (
     <div className="container mx-auto px-6 md:px-10 lg:px-16 py-8 space-y-16">
