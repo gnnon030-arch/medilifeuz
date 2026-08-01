@@ -35,6 +35,7 @@ import {
   adminUploadMedia,
 } from "@/lib/admin.functions";
 import * as XLSX from "xlsx";
+import { matchesSearch } from "@/lib/search";
 
 
 export const Route = createFileRoute("/admin")({
