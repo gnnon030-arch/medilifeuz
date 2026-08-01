@@ -1,2 +1,4 @@
-export const GOOGLE_MAPS_API_KEY = "AIzaSyAvsX6Zue-IUqhKQh2ocJ3A2EkQF9Sj70E";
-export const YANDEX_MAPS_API_KEY = "62067715-7972-4308-9eaa-63958a9c488c";
+// Yandex Maps JS key is read from the environment (not hardcoded in source).
+// This key must be domain-restricted in the Yandex developer console.
+export const YANDEX_MAPS_API_KEY: string =
+  (import.meta.env.VITE_YANDEX_MAPS_API_KEY as string | undefined) ?? "";
