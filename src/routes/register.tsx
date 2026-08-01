@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { formatPhone, isValidPhone } from "@/lib/phone";
 
 export const Route = createFileRoute("/register")({
@@ -47,10 +46,17 @@ function RegisterPage() {
 
   const onGoogle = async () => {
     setLoading(true);
-    const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (res.error) { setLoading(false); return toast.error(res.error.message ?? "Google failed"); }
-    if (res.redirected) return;
-    navigate({ to: "/profil" });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+        queryParams: { prompt: "select_account" },
+      },
+    });
+    if (error) {
+      setLoading(false);
+      toast.error(error.message ?? "Google failed");
+    }
   };
 
   return (
