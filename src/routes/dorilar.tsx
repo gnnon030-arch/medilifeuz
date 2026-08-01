@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MedicineCard, type Medicine } from "@/components/MedicineCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { matchesSearch } from "@/lib/search";
 
 export const Route = createFileRoute("/dorilar")({
   component: MedicinesPage,
@@ -21,23 +22,27 @@ function MedicinesPage() {
 
   const currentLang: "latin" | "cyrillic" = i18n.language === "uz_cyrl" ? "cyrillic" : "latin";
 
-  const { data = [], isLoading } = useQuery({
-    queryKey: ["medicines-all", currentLang],
+  const { data: all = [], isLoading } = useQuery({
+    queryKey: ["medicines-all"],
     queryFn: async () => {
-      const { data } = await supabase.from("medicines").select("*").eq("language", currentLang).order("created_at", { ascending: false });
+      const { data } = await supabase.from("medicines").select("*").order("created_at", { ascending: false });
       return (data ?? []) as Medicine[];
     },
   });
 
+  // Tanlangan tildagi dorilar; agar o'sha tilda hech narsa bo'lmasa — hammasi ko'rsatiladi
+  const data = useMemo(() => {
+    const forLang = all.filter((m: any) => (m.language ?? "latin") === currentLang);
+    return forLang.length ? forLang : all;
+  }, [all, currentLang]);
+
   const filtered = useMemo(() => {
-    const s = q.toLowerCase();
     const min = Number(minPrice) || 0;
     const max = Number(maxPrice) || Number.POSITIVE_INFINITY;
     const pickName = (m: Medicine) => (i18n.language === "uz_cyrl" && m.name_cyrl ? m.name_cyrl : m.name) || "";
     const arr = data.filter((m) => {
-      const nameMatch = !s || m.name.toLowerCase().includes(s) || (m.name_cyrl ?? "").toLowerCase().includes(s);
       const p = Number(m.price) || 0;
-      return nameMatch && p >= min && p <= max;
+      return matchesSearch(q, m.name, m.name_cyrl) && p >= min && p <= max;
     });
     arr.sort((a, b) => {
       if (sort === "price-asc") return (Number(a.price) || 0) - (Number(b.price) || 0);
@@ -47,6 +52,7 @@ function MedicinesPage() {
     });
     return arr;
   }, [data, q, minPrice, maxPrice, sort, i18n.language]);
+
 
   return (
     <div className="container mx-auto px-4 py-10">
