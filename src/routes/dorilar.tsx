@@ -102,7 +102,11 @@ function MedicinesPage() {
         <p className="text-muted-foreground">{t("medicines.empty")}</p>
       ) : (
         <>
-          <div className="text-xs text-muted-foreground mb-3">Topildi: {filtered.length} ta</div>
+          <div className="text-xs text-muted-foreground mb-3">
+            Topildi: {filtered.length} ta{filtered.length >= PAGE_SIZE ? "+ (aniqroq qidiring)" : ""}
+            {isFetching ? " · yuklanmoqda…" : ""}
+          </div>
+
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {filtered.map((m) => <MedicineCard key={m.id} m={m} />)}
           </div>
