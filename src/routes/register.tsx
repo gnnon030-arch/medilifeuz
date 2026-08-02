@@ -46,18 +46,20 @@ function RegisterPage() {
 
   const onGoogle = async () => {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin,
-        queryParams: { prompt: "select_account" },
-      },
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+      extraParams: { prompt: "select_account" },
     });
-    if (error) {
+    if (result.error) {
       setLoading(false);
-      toast.error(error.message ?? "Google failed");
+      toast.error("Google bilan kirish amalga oshmadi");
+      return;
     }
+    if (result.redirected) return;
+    toast.success(t("auth.success_login"));
+    navigate({ to: "/" });
   };
+
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-md">
