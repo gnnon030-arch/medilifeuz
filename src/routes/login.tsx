@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { formatPhone, isValidPhone } from "@/lib/phone";
+import { lovable } from "@/integrations/lovable";
+
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
