@@ -48,19 +48,25 @@ function RegisterPage() {
 
   const onGoogle = async () => {
     setLoading(true);
+    console.info("[auth] google sign-up start", { redirect_uri: window.location.origin });
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
       extraParams: { prompt: "select_account" },
     });
+    console.info("[auth] google sign-up result", {
+      redirected: (result as { redirected?: boolean }).redirected,
+      error: result.error ? String(result.error?.message ?? result.error) : null,
+    });
     if (result.error) {
       setLoading(false);
-      toast.error("Google bilan kirish amalga oshmadi");
+      toast.error(`Google bilan kirish amalga oshmadi: ${result.error?.message ?? "noma'lum xato"}`);
       return;
     }
     if (result.redirected) return;
     toast.success(t("auth.success_login"));
     navigate({ to: "/" });
   };
+
 
 
   return (
