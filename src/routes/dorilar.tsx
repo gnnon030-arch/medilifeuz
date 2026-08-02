@@ -1,71 +1,74 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MedicineCard, type Medicine } from "@/components/MedicineCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { matchesSearch } from "@/lib/search";
 
 export const Route = createFileRoute("/dorilar")({
   component: MedicinesPage,
   head: () => ({ meta: [{ title: "Dorilar — MediLife" }] }),
 });
 
+const PAGE_SIZE = 200;
+
+/** So'rovni PostgREST ilike patterniga aylantiradi (maxsus belgilarni tozalaydi). */
+function tokens(q: string): string[] {
+  return q
+    .toLowerCase()
+    .replace(/[,()%*"']/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 5);
+}
+
 function MedicinesPage() {
   const { t, i18n } = useTranslation();
   const [q, setQ] = useState("");
+  const [dq, setDq] = useState("");
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
   const [sort, setSort] = useState<"az" | "za" | "price-asc" | "price-desc">("az");
 
+  useEffect(() => {
+    const id = setTimeout(() => setDq(q.trim()), 250);
+    return () => clearTimeout(id);
+  }, [q]);
+
   const currentLang: "latin" | "cyrillic" = i18n.language === "uz_cyrl" ? "cyrillic" : "latin";
 
-  const { data: all = [], isLoading } = useQuery({
-    queryKey: ["medicines-all"],
-    staleTime: 5 * 60 * 1000,
+  const { data: filtered = [], isLoading, isFetching } = useQuery({
+    queryKey: ["medicines-search", currentLang, dq, minPrice, maxPrice, sort],
+    placeholderData: keepPreviousData,
+    staleTime: 2 * 60 * 1000,
     queryFn: async () => {
-      // PostgREST bir so'rovda 1000 qatordan ko'p bermaydi — hammasini sahifalab olamiz
-      const out: Medicine[] = [];
-      const size = 1000;
-      for (let from = 0; ; from += size) {
-        const { data, error } = await supabase
-          .from("medicines")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .range(from, from + size - 1);
-        if (error) break;
-        out.push(...((data ?? []) as Medicine[]));
-        if (!data || data.length < size) break;
-      }
-      return out;
+      const min = Number(minPrice) || 0;
+      const max = Number(maxPrice) || 0;
+
+      const run = async (withLang: boolean) => {
+        let query = supabase.from("medicines").select("*");
+        if (withLang) query = query.eq("language", currentLang);
+        for (const tok of tokens(dq)) {
+          query = query.or(`name.ilike.%${tok}%,name_cyrl.ilike.%${tok}%`);
+        }
+        if (min > 0) query = query.gte("price", min);
+        if (max > 0) query = query.lte("price", max);
+        if (sort === "price-asc") query = query.order("price", { ascending: true });
+        else if (sort === "price-desc") query = query.order("price", { ascending: false });
+        else query = query.order(currentLang === "cyrillic" ? "name_cyrl" : "name", { ascending: sort === "az" });
+        const { data, error } = await query.limit(PAGE_SIZE);
+        if (error) return [] as Medicine[];
+        return (data ?? []) as Medicine[];
+      };
+
+      const primary = await run(true);
+      if (primary.length) return primary;
+      return await run(false);
     },
   });
 
-
-  // Tanlangan tildagi dorilar; agar o'sha tilda hech narsa bo'lmasa — hammasi ko'rsatiladi
-  const data = useMemo(() => {
-    const forLang = all.filter((m: any) => (m.language ?? "latin") === currentLang);
-    return forLang.length ? forLang : all;
-  }, [all, currentLang]);
-
-  const filtered = useMemo(() => {
-    const min = Number(minPrice) || 0;
-    const max = Number(maxPrice) || Number.POSITIVE_INFINITY;
-    const pickName = (m: Medicine) => (i18n.language === "uz_cyrl" && m.name_cyrl ? m.name_cyrl : m.name) || "";
-    const arr = data.filter((m) => {
-      const p = Number(m.price) || 0;
-      return matchesSearch(q, m.name, m.name_cyrl) && p >= min && p <= max;
-    });
-    arr.sort((a, b) => {
-      if (sort === "price-asc") return (Number(a.price) || 0) - (Number(b.price) || 0);
-      if (sort === "price-desc") return (Number(b.price) || 0) - (Number(a.price) || 0);
-      const cmp = pickName(a).localeCompare(pickName(b), i18n.language === "uz_cyrl" ? "ru" : "uz");
-      return sort === "az" ? cmp : -cmp;
-    });
-    return arr;
-  }, [data, q, minPrice, maxPrice, sort, i18n.language]);
 
 
   return (
@@ -99,7 +102,11 @@ function MedicinesPage() {
         <p className="text-muted-foreground">{t("medicines.empty")}</p>
       ) : (
         <>
-          <div className="text-xs text-muted-foreground mb-3">Topildi: {filtered.length} ta</div>
+          <div className="text-xs text-muted-foreground mb-3">
+            Topildi: {filtered.length} ta{filtered.length >= PAGE_SIZE ? "+ (aniqroq qidiring)" : ""}
+            {isFetching ? " · yuklanmoqda…" : ""}
+          </div>
+
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {filtered.map((m) => <MedicineCard key={m.id} m={m} />)}
           </div>
