@@ -100,7 +100,13 @@ function MedicinesPage() {
       </div>
       {isLoading ? (
         <p className="text-muted-foreground">{t("common.loading")}</p>
+      ) : isError ? (
+        <div className="text-muted-foreground">
+          <p>Ma'lumot yuklanmadi. Internetni tekshirib, qayta urinib ko'ring.</p>
+          <button className="mt-2 underline" onClick={() => refetch()}>Qayta yuklash</button>
+        </div>
       ) : filtered.length === 0 ? (
+
         <p className="text-muted-foreground">{t("medicines.empty")}</p>
       ) : (
         <>
