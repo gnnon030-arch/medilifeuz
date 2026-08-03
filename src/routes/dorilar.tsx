@@ -39,10 +39,12 @@ function MedicinesPage() {
 
   const currentLang: "latin" | "cyrillic" = i18n.language === "uz_cyrl" ? "cyrillic" : "latin";
 
-  const { data: filtered = [], isLoading, isFetching } = useQuery({
+  const { data: filtered = [], isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ["medicines-search", currentLang, dq, minPrice, maxPrice, sort],
     placeholderData: keepPreviousData,
     staleTime: 2 * 60 * 1000,
+    retry: 3,
+    retryDelay: (a) => Math.min(1000 * 2 ** a, 5000),
     queryFn: async () => {
       const min = Number(minPrice) || 0;
       const max = Number(maxPrice) || 0;
@@ -59,7 +61,7 @@ function MedicinesPage() {
         else if (sort === "price-desc") query = query.order("price", { ascending: false });
         else query = query.order(currentLang === "cyrillic" ? "name_cyrl" : "name", { ascending: sort === "az" });
         const { data, error } = await query.limit(PAGE_SIZE);
-        if (error) return [] as Medicine[];
+        if (error) throw new Error(error.message);
         return (data ?? []) as Medicine[];
       };
 
@@ -98,7 +100,13 @@ function MedicinesPage() {
       </div>
       {isLoading ? (
         <p className="text-muted-foreground">{t("common.loading")}</p>
+      ) : isError ? (
+        <div className="text-muted-foreground">
+          <p>Ma'lumot yuklanmadi. Internetni tekshirib, qayta urinib ko'ring.</p>
+          <button className="mt-2 underline" onClick={() => refetch()}>Qayta yuklash</button>
+        </div>
       ) : filtered.length === 0 ? (
+
         <p className="text-muted-foreground">{t("medicines.empty")}</p>
       ) : (
         <>
