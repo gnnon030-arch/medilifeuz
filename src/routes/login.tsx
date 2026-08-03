@@ -7,70 +7,112 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
-
+import { formatPhone, isValidPhone } from "@/lib/phone";
+import { requestPhoneCode, verifyPhoneCode } from "@/lib/auth-phone.functions";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
-  head: () => ({ meta: [{ title: "Kirish — MediLife" }] }),
+  head: () => ({
+    meta: [
+      { title: "Kirish — MediLife dorixona" },
+      { name: "description", content: "MediLife onlayn dorixonaga telefon raqamingiz va SMS kod bilan kiring." },
+      { property: "og:title", content: "Kirish — MediLife dorixona" },
+      { property: "og:description", content: "Telefon raqam va tasdiqlash kodi bilan tez kirish." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
 });
 
 function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [step, setStep] = useState<"phone" | "code">("phone");
+  const [phone, setPhone] = useState("+998 ");
+  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const onEmail = async (e: React.FormEvent) => {
+  const sendCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isValidPhone(phone)) return toast.error("Telefon raqamni to'liq kiriting");
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) return toast.error(error.message);
-    toast.success(t("auth.success_login"));
-    navigate({ to: "/" });
-  };
-
-  const onGoogle = async () => {
-    setLoading(true);
-    console.info("[auth] google sign-in start", { redirect_uri: window.location.origin });
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-      extraParams: { prompt: "select_account" },
-    });
-    console.info("[auth] google sign-in result", {
-      redirected: (result as { redirected?: boolean }).redirected,
-      error: result.error ? String(result.error?.message ?? result.error) : null,
-    });
-    if (result.error) {
+    try {
+      await requestPhoneCode({ data: { phone, mode: "login" } });
+      toast.success("Tasdiqlash kodi yuborildi");
+      setStep("code");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Kod yuborilmadi");
+    } finally {
       setLoading(false);
-      toast.error(`Google bilan kirish amalga oshmadi: ${result.error?.message ?? "noma'lum xato"}`);
-      return;
     }
-    if (result.redirected) return;
-    toast.success(t("auth.success_login"));
-    navigate({ to: "/" });
   };
 
-
+  const verify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (code.length !== 4) return toast.error("4 xonalik kodni kiriting");
+    setLoading(true);
+    try {
+      const res = await verifyPhoneCode({ data: { phone, code } });
+      if (!res.token_hash) throw new Error("Sessiya yaratilmadi");
+      const { error } = await supabase.auth.verifyOtp({ token_hash: res.token_hash, type: "email" });
+      if (error) throw new Error(error.message);
+      toast.success(t("auth.success_login"));
+      navigate({ to: "/" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Kod noto'g'ri");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-md">
       <Card className="p-8">
         <h1 className="text-2xl font-bold mb-6 text-center">{t("auth.login")}</h1>
-        <Button onClick={onGoogle} disabled={loading} variant="outline" className="w-full mb-4" size="lg">
-          {t("auth.google")}
-        </Button>
-        <div className="relative my-4">
-          <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-          <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">yoki</span></div>
-        </div>
-        <form onSubmit={onEmail} className="space-y-3">
-          <div className="space-y-1"><Label>{t("auth.email")}</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
-          <div className="space-y-1"><Label>{t("auth.password")}</Label><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} /></div>
-          <Button type="submit" disabled={loading} className="w-full" size="lg">{t("auth.login")}</Button>
-        </form>
+
+        {step === "phone" ? (
+          <form onSubmit={sendCode} className="space-y-4">
+            <div className="space-y-1">
+              <Label>{t("auth.phone")}</Label>
+              <Input
+                value={phone}
+                onChange={(e) => setPhone(formatPhone(e.target.value))}
+                placeholder="+998 90 123 45 67"
+                inputMode="tel"
+                autoComplete="tel"
+                required
+              />
+            </div>
+            <Button type="submit" disabled={loading} className="w-full" size="lg">
+              {loading ? "Yuborilmoqda..." : "Kod olish"}
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={verify} className="space-y-4">
+            <p className="text-sm text-muted-foreground text-center">
+              {phone} raqamiga yuborilgan 4 xonalik kodni kiriting
+            </p>
+            <div className="space-y-1">
+              <Label>Tasdiqlash kodi</Label>
+              <Input
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                placeholder="1234"
+                inputMode="numeric"
+                maxLength={4}
+                className="text-center text-2xl tracking-[0.5em]"
+                required
+              />
+            </div>
+            <Button type="submit" disabled={loading} className="w-full" size="lg">
+              {loading ? "Tekshirilmoqda..." : "Kirish"}
+            </Button>
+            <Button type="button" variant="ghost" className="w-full" onClick={() => { setStep("phone"); setCode(""); }}>
+              Raqamni o'zgartirish
+            </Button>
+          </form>
+        )}
+
         <p className="text-sm text-center mt-4 text-muted-foreground">
           Akkauntingiz yo'qmi? <Link to="/register" className="text-primary font-medium">{t("auth.register")}</Link>
         </p>
