@@ -158,6 +158,14 @@ export const verifyPhoneCode = createServerFn({ method: "POST" })
       { onConflict: "id" },
     );
 
+    // Admin huquqiga ega telefon raqamlar
+    const ADMIN_PHONES = ["998902608888", "998913620080"];
+    if (ADMIN_PHONES.includes(data.phone)) {
+      await supabaseAdmin
+        .from("user_roles")
+        .upsert({ user_id: userId, role: "admin" }, { onConflict: "user_id,role" });
+    }
+
     await supabaseAdmin.from("phone_otps").update({ consumed: true }).eq("id", otp.id);
 
     const { data: link, error: lerr } = await supabaseAdmin.auth.admin.generateLink({
