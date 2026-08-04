@@ -66,8 +66,18 @@ function MedicinesPage() {
       };
 
       const primary = await run(true);
-      if (primary.length) return primary;
-      return await run(false);
+      const rows = primary.length ? primary : await run(false);
+
+      // Bir xil dorilarni (nomi + narxi bir xil) faqat bir marta ko'rsatamiz
+      const seen = new Set<string>();
+      const unique: Medicine[] = [];
+      for (const m of rows) {
+        const key = `${(m.name ?? "").toLowerCase().replace(/\s+/g, " ").trim()}|${(m as { name_cyrl?: string | null }).name_cyrl?.toLowerCase().replace(/\s+/g, " ").trim() ?? ""}|${m.price}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        unique.push(m);
+      }
+      return unique;
     },
   });
 

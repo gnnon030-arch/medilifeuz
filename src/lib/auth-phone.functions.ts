@@ -14,10 +14,13 @@ const RequestSchema = z.object({
 
 const VerifySchema = z.object({
   phone: PhoneSchema,
-  code: z.string().trim().regex(/^\d{4}$/, "Kod 4 xonalik bo'lishi kerak"),
+  code: z.string().trim().regex(/^\d{6}$/, "Kod 6 xonalik bo'lishi kerak"),
   full_name: z.string().trim().min(2).max(100).optional(),
   consume: z.boolean().optional(),
 });
+
+const BOT_USERNAME = "@medilife_account_bot";
+const NOT_REGISTERED_MSG = `Siz hali botdan ro'yxatdan o'tmagansiz. Avval ${BOT_USERNAME} botiga kirib /start bosing va raqamingizni yuboring.`;
 
 export const requestPhoneCode = createServerFn({ method: "POST" })
   .inputValidator((input) => RequestSchema.parse(input))
@@ -25,22 +28,24 @@ export const requestPhoneCode = createServerFn({ method: "POST" })
     const { sha256Hex, syntheticEmail, formatPhoneDisplay } = await import("./auth-phone.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // 1) Telegram botdan ro'yxatdan o'tganini tekshirish
+    const { data: tgUser } = await supabaseAdmin
+      .from("telegram_users")
+      .select("chat_id, first_name, phone_number")
+      .eq("phone_number", data.phone)
+      .maybeSingle();
+
+    if (!tgUser) throw new Error(NOT_REGISTERED_MSG);
+
     const email = syntheticEmail(data.phone);
-
-    // Foydalanuvchi bor/yo'qligini aniqlash
-    let exists = false;
     const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-    exists = !!list?.users?.some((u) => u.email?.toLowerCase() === email);
+    const exists = !!list?.users?.some((u) => u.email?.toLowerCase() === email);
 
-    if (data.mode === "login" && !exists) {
-      throw new Error("Bu raqam ro'yxatdan o'tmagan. Avval ro'yxatdan o'ting.");
-    }
     if (data.mode === "register" && exists) {
       throw new Error("Bu raqam allaqachon ro'yxatdan o'tgan. Kirish sahifasidan foydalaning.");
     }
 
     // Spamdan himoya: 60 sekundda 1 marta, soatda 5 marta
-    const nowIso = new Date().toISOString();
     const { data: recent } = await supabaseAdmin
       .from("phone_otps")
       .select("id, created_at")
@@ -57,10 +62,9 @@ export const requestPhoneCode = createServerFn({ method: "POST" })
       }
     }
 
-    const code = String(Math.floor(1000 + Math.random() * 9000));
+    const code = String(Math.floor(100000 + Math.random() * 900000));
     const expires_at = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
-    // eski kodlarni kuchdan qoldirish
     await supabaseAdmin
       .from("phone_otps")
       .update({ consumed: true })
@@ -74,32 +78,28 @@ export const requestPhoneCode = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
 
-    // Telegramga yuborish
+    // 2) Kodni foydalanuvchining Telegram chatiga yuborish
     const token = process.env["TELEGRAM_BOT_TOKEN"];
-    const chatId = process.env["TELEGRAM_CHAT_ID"];
-    if (token && chatId) {
-      const text = [
-        "🔐 <b>MediLife — tasdiqlash kodi</b>",
-        `📞 ${formatPhoneDisplay(data.phone)}`,
-        `🔢 Kod: <b>${code}</b>`,
-        data.mode === "register" ? "📝 Ro'yxatdan o'tish" : "🔓 Kirish",
-        `⏱ ${nowIso}`,
-      ].join("\n");
-      try {
-        const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" }),
-        });
-        if (!res.ok) console.error("Telegram OTP send failed", await res.text());
-      } catch (e) {
-        console.error("Telegram OTP send failed", e);
-      }
-    } else {
-      console.error("Telegram sozlanmagan: TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID yo'q");
+    if (!token) throw new Error("Telegram bot sozlanmagan. Administratorga murojaat qiling.");
+
+    const text = [
+      "🔐 <b>MediLife — tasdiqlash kodi</b>",
+      `🔢 Kod: <b>${code}</b>`,
+      `📞 ${formatPhoneDisplay(data.phone)}`,
+      "⏱ Kod 5 daqiqa amal qiladi. Uni hech kimga bermang!",
+    ].join("\n");
+
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: tgUser.chat_id, text, parse_mode: "HTML" }),
+    });
+    if (!res.ok) {
+      console.error("Telegram OTP send failed", res.status, await res.text());
+      throw new Error(`Kod yuborilmadi. ${BOT_USERNAME} botni bloklamaganingizni tekshiring.`);
     }
 
-    return { ok: true as const, expires_in: 300 };
+    return { ok: true as const, expires_in: 300, first_name: tgUser.first_name ?? null };
   });
 
 export const verifyPhoneCode = createServerFn({ method: "POST" })
@@ -130,6 +130,15 @@ export const verifyPhoneCode = createServerFn({ method: "POST" })
     // Faqat tekshirish (ism kiritish bosqichiga o'tish uchun)
     if (data.consume === false) return { verified: true as const, token_hash: null };
 
+    const { data: tgUser } = await supabaseAdmin
+      .from("telegram_users")
+      .select("first_name, last_name")
+      .eq("phone_number", data.phone)
+      .maybeSingle();
+
+    const tgName = [tgUser?.first_name, tgUser?.last_name].filter(Boolean).join(" ").trim();
+    const fullName = data.full_name || tgName || formatPhoneDisplay(data.phone);
+
     const email = syntheticEmail(data.phone);
     const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
     const existing = list?.users?.find((u) => u.email?.toLowerCase() === email);
@@ -141,7 +150,7 @@ export const verifyPhoneCode = createServerFn({ method: "POST" })
         email_confirm: true,
         password: crypto.randomUUID() + crypto.randomUUID(),
         user_metadata: {
-          full_name: data.full_name ?? formatPhoneDisplay(data.phone),
+          full_name: fullName,
           phone: formatPhoneDisplay(data.phone),
         },
       });
@@ -153,7 +162,7 @@ export const verifyPhoneCode = createServerFn({ method: "POST" })
       {
         id: userId,
         phone: formatPhoneDisplay(data.phone),
-        ...(data.full_name ? { full_name: data.full_name } : {}),
+        full_name: fullName,
       },
       { onConflict: "id" },
     );
@@ -176,5 +185,5 @@ export const verifyPhoneCode = createServerFn({ method: "POST" })
       throw new Error(lerr?.message ?? "Sessiya yaratilmadi");
     }
 
-    return { verified: true as const, token_hash: link.properties.hashed_token };
+    return { verified: true as const, token_hash: link.properties.hashed_token, full_name: fullName };
   });

@@ -38,7 +38,8 @@ function RegisterPage() {
     if (!isValidPhone(phone)) return toast.error("Telefon raqamni to'liq kiriting");
     setLoading(true);
     try {
-      await requestPhoneCode({ data: { phone, mode: "register" } });
+      const res = await requestPhoneCode({ data: { phone, mode: "register" } });
+      if (res.first_name && !name) setName(res.first_name);
       toast.success("Tasdiqlash kodi yuborildi");
       setStep("code");
     } catch (err) {
@@ -50,7 +51,7 @@ function RegisterPage() {
 
   const checkCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (code.length !== 4) return toast.error("4 xonalik kodni kiriting");
+    if (code.length !== 6) return toast.error("6 xonalik kodni kiriting");
     setLoading(true);
     try {
       await verifyPhoneCode({ data: { phone, code, consume: false } });
@@ -107,17 +108,17 @@ function RegisterPage() {
         {step === "code" && (
           <form onSubmit={checkCode} className="space-y-4">
             <p className="text-sm text-muted-foreground text-center">
-              {phone} raqamiga yuborilgan 4 xonalik kodni kiriting
+              {phone} raqamiga yuborilgan 6 xonalik kodni kiriting
             </p>
             <div className="space-y-1">
               <Label>Tasdiqlash kodi</Label>
               <Input
                 value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                placeholder="1234"
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="123456"
                 inputMode="numeric"
-                maxLength={4}
-                className="text-center text-2xl tracking-[0.5em]"
+                maxLength={6}
+                className="text-center text-2xl tracking-[0.35em]"
                 required
               />
             </div>
