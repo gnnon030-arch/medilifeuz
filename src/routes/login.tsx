@@ -49,7 +49,7 @@ function LoginPage() {
 
   const verify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (code.length !== 4) return toast.error("4 xonalik kodni kiriting");
+    if (code.length !== 6) return toast.error("6 xonalik kodni kiriting");
     setLoading(true);
     try {
       const res = await verifyPhoneCode({ data: { phone, code } });
@@ -90,17 +90,17 @@ function LoginPage() {
         ) : (
           <form onSubmit={verify} className="space-y-4">
             <p className="text-sm text-muted-foreground text-center">
-              {phone} raqamiga yuborilgan 4 xonalik kodni kiriting
+              {phone} raqamiga yuborilgan 6 xonalik kodni kiriting
             </p>
             <div className="space-y-1">
               <Label>Tasdiqlash kodi</Label>
               <Input
                 value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                placeholder="1234"
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="123456"
                 inputMode="numeric"
-                maxLength={4}
-                className="text-center text-2xl tracking-[0.5em]"
+                maxLength={6}
+                className="text-center text-2xl tracking-[0.35em]"
                 required
               />
             </div>
