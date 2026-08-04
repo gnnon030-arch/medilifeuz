@@ -38,7 +38,8 @@ function RegisterPage() {
     if (!isValidPhone(phone)) return toast.error("Telefon raqamni to'liq kiriting");
     setLoading(true);
     try {
-      await requestPhoneCode({ data: { phone, mode: "register" } });
+      const res = await requestPhoneCode({ data: { phone, mode: "register" } });
+      if (res.first_name && !name) setName(res.first_name);
       toast.success("Tasdiqlash kodi yuborildi");
       setStep("code");
     } catch (err) {

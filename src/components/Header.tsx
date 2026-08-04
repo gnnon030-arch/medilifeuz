@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 export function Header() {
   const { t } = useTranslation();
   const { count } = useCart();
-  const { user } = useAuth();
+  const { user, fullName } = useAuth();
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
 
@@ -83,7 +83,10 @@ export function Header() {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon"><UserIcon className="h-5 w-5" /></Button>
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <UserIcon className="h-5 w-5" />
+                  <span className="hidden sm:inline max-w-28 truncate">{fullName ?? t("nav.profile")}</span>
+                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => navigate({ to: "/profil" })}>
